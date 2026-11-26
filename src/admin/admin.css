@@ -1,0 +1,67 @@
+/* Complementos do painel do admin (o resto vem de styles/app.css). */
+.admin-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; background: var(--ink); color: #fff; border-radius: 4px; padding: 1px 6px; vertical-align: middle; }
+.admin-col { min-width: 0; }
+.side a.brand, .mobile-nav a.brand { color: var(--accent); font-weight: 800; background: none; }
+.mobile-nav a.brand { padding: 4px 0; }
+.shell.admin .side-foot { border-top: 1px solid var(--line); }
+.admin-email { padding: 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-signout { text-align: left; padding: 9px 10px; }
+.mobile-nav .side-foot { margin-top: auto; padding-top: 12px; display: grid; gap: 4px; border-top: 1px solid var(--line); }
+.btn.danger-solid { background: var(--bad); border-color: var(--bad); color: #fff; }
+.btn.danger:hover { border-color: var(--bad); filter: none; }
+
+.auth .brand { justify-self: center; }
+.code-input { font-size: 1.4rem; letter-spacing: 0.4em; text-align: center; font-variant-numeric: tabular-nums; }
+.mfa-steps { list-style: decimal; padding-left: 20px; display: grid; gap: 4px; color: var(--muted); }
+.mfa-qr { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.mfa-qr img { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 6px; }
+.secret { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; word-break: break-all; }
+
+.filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.filters .field.grow { flex: 1 1 260px; }
+.filters select { width: auto; }
+@media (max-width: 520px) { .filters .field { flex: 1 1 100%; } .filters select { width: 100%; } }
+.results-count { margin-bottom: 8px; }
+
+.attention { margin: 8px -16px -16px; border-top: 1px solid var(--line); }
+.attention .list-row { padding: 12px 16px; }
+.plan-bars { display: grid; gap: 14px; margin-bottom: 12px; }
+.plan-bars li { display: grid; gap: 6px; }
+
+.detail-grid { display: grid; gap: 16px; grid-template-areas: 'facts' 'actions' 'notes'; }
+.detail-facts { grid-area: facts; }
+.detail-actions { grid-area: actions; }
+.detail-notes { grid-area: notes; }
+@media (min-width: 900px) {
+  .detail-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); grid-template-areas: 'facts actions' 'notes actions'; align-items: start; }
+}
+.facts .wide { grid-column: 1 / -1; }
+@media (min-width: 600px) { .facts .wide { grid-column: auto / span 2; } }
+.facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px 16px; margin: 12px 0 0; }
+.facts dt { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+.facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.as-label { font-size: 1.15rem; }
+.notes-actions { margin-top: 10px; }
+.actions-list { display: grid; gap: 8px; margin-top: 12px; margin-bottom: 8px; }
+.detail-tabs { margin-top: 24px; }
+.tab-body { padding-top: 16px; }
+.tab-hint { margin-bottom: 10px; }
+.clamp { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.list-row .grow { min-width: 0; }
+
+.bucket-empty { margin-top: 8px; }
+.bill-list { margin: 12px -16px -16px; border-top: 1px solid var(--line); }
+.bill-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.bill-row:last-child { border-bottom: 0; }
+.bill-row .grow { flex: 1 1 260px; }
+.bill-actions { flex: 0 0 auto; }
+@media (max-width: 520px) { .bill-actions { flex: 1 1 100%; } .bill-actions > * { flex: 1; } }
+
+.announce-list { display: grid; gap: 0; margin: 12px -16px -16px; border-top: 1px solid var(--line); }
+.announce-list li { padding: 12px 16px; border-bottom: 1px solid var(--line); display: grid; gap: 4px; }
+.announce-list li:last-child { border-bottom: 0; }
+.pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.quote { border-left: 3px solid var(--accent); background: var(--surface-2); padding: 8px 12px; border-radius: 0 8px 8px 0; display: grid; gap: 4px; }
+.plan-cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.changes { list-style: disc; padding-left: 20px; }
+.list-foot { margin-top: 12px; }
