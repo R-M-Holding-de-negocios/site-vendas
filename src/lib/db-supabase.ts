@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Db, Query, TableName, Tables } from './db'
 
 const PAGE = 1000 // limite de linhas por requisição do Supabase
@@ -10,8 +10,12 @@ const translate = (e: { message: string; code?: string }) => {
   return new Error(e.message)
 }
 
+/** Cliente criado por supabaseDb; usado para chamar as Edge Functions (lib/mercadopago.ts). */
+export let supabaseClient: Pick<SupabaseClient, 'functions'> | null = null
+
 export function supabaseDb(url: string, key: string): Db {
   const sb = createClient(url, key)
+  supabaseClient = sb
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function build(table: string, q: Query = {}, from?: number, to?: number): any {

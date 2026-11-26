@@ -124,6 +124,8 @@ export interface Rpc {
   admin_audit_list(a: { store_id: string | null }): Promise<AuditEntry[]>
   admin_update_plan(a: { id: PlanId; price_cents: number; fee_percent: number }): Promise<void>
   admin_announce(a: { title: string; body: string }): Promise<void>
+  /** Contas de pagamento online conectadas pela loja (nunca devolve os tokens). */
+  payment_connections(a: { store_id: string }): Promise<{ mercadopago: boolean }>
 }
 
 export interface User {

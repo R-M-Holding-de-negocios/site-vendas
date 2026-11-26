@@ -1,0 +1,18 @@
+{
+  // Verificação de tipos do código das funções (Edge Functions e Pages Functions) e dos
+  // testes delas: npx tsc -p tsconfig.functions.json
+  // Os index.ts e _shared/deno.ts usam globais do Deno e "npm:" e ficam de fora.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["supabase/functions/_shared", "functions", "tests/functions"],
+  "exclude": ["supabase/functions/_shared/deno.ts"]
+}
