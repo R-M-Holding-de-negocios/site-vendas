@@ -107,6 +107,8 @@ export function quote(input: QuoteInput): Quote {
   const errors: string[] = []
   const items: OrderItem[] = []
   const pro = can(store, 'qty_discount')
+  // Unidades já pegas por linhas anteriores do mesmo carrinho (mesmo produto/variação).
+  const used = new Map<string, number>()
 
   for (const line of input.lines) {
     const p = input.products.find((x) => x.id === line.product_id)
@@ -129,11 +131,13 @@ export function quote(input: QuoteInput): Quote {
       errors.push(`Quantidade inválida para ${p.name}.`)
       continue
     }
-    const stock = availableStock(p, v)
+    const key = `${p.id}:${v?.id ?? ''}`
+    const stock = availableStock(p, v) - (used.get(key) ?? 0)
     if (qty > stock) {
       errors.push(stock <= 0 ? `${p.name} esgotou.` : `Só restam ${stock} unidades de ${p.name}.`)
       continue
     }
+    used.set(key, (used.get(key) ?? 0) + qty)
     const base = basePrice(p, v, now)
     const off = pro ? qtyDiscountPercent(p, qty) : 0
     const unit = base - Math.floor((base * off) / 100)

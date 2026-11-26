@@ -78,7 +78,8 @@ export function demoRpc(s: DemoStore): Rpc {
       const needsAddress = a.shipping.method === 'zone' || a.shipping.method === 'fixed'
       if (needsAddress && (!a.shipping.address?.street || !a.shipping.address?.number)) throw new Error('Informe o endereço de entrega.')
 
-      const code = a.coupon.trim().toUpperCase()
+      // Cupom só vale no plano Pro; nos outros planos o código é ignorado (não conta uso nem fica no pedido).
+      const code = can(store, 'coupons') ? a.coupon.trim().toUpperCase() : ''
       const coupon = code ? (s.rows('coupons').find((c) => c.store_id === store.id && c.code === code && c.active) ?? null) : null
       if (code && !coupon) throw new Error('Cupom inválido.')
       const fee = plans().find((p) => p.id === store.plan)!.fee_percent
