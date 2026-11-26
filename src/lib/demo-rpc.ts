@@ -318,6 +318,11 @@ export function demoRpc(s: DemoStore): Rpc {
       admin()
       s.insert('announcements', { title: a.title, body: a.body })
     },
+
+    async payment_connections(a) {
+      const st = s.rows('stores').find((x) => x.id === a.store_id)
+      return { mercadopago: !!st?.settings?.payments?.mercadopago?.enabled }
+    },
   }
 
   function entry(storeId: string, action: string) {
