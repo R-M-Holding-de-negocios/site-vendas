@@ -72,3 +72,9 @@ export function randomToken(len = 24) {
   const bytes = crypto.getRandomValues(new Uint8Array(len))
   return Array.from(bytes, (b) => 'abcdefghijkmnpqrstuvwxyz23456789'[b % 32]).join('')
 }
+
+export function formatAddress(a: { street: string; number: string; complement: string; district: string; city: string; state: string } | null) {
+  if (!a) return ''
+  const line = [a.street && `${a.street}${a.number ? ', ' + a.number : ''}`, a.complement].filter(Boolean).join(' ')
+  return [line, a.district, [a.city, a.state].filter(Boolean).join('/')].filter(Boolean).join(' - ')
+}
