@@ -19,9 +19,10 @@
 .zone-row { display: grid; grid-template-columns: 1fr 140px auto; gap: 8px; align-items: center; }
 .hours-row { display: grid; grid-template-columns: 90px auto 1fr 1fr; gap: 8px; align-items: center; }
 @media (max-width: 520px) { .hours-row { grid-template-columns: 80px auto 1fr; } .hours-row input:last-child { grid-column: 3; } }
-.editor { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+.editor { display: grid; grid-template-rows: auto auto minmax(0, 1fr); height: 100vh; height: 100dvh; }
 .editor-top { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--surface); flex-wrap: wrap; }
-.editor-body { display: grid; grid-template-columns: 1fr; min-height: 0; }
+.editor-body { display: grid; grid-template-columns: 1fr; min-height: 0; overflow: hidden; }
+@media (max-width: 979px) { .editor-top .hide-sm { display: none; } .editor-stage { padding: 0; } .preview-frame { height: 100%; border-radius: 0; } }
 .editor-side { overflow-y: auto; background: var(--surface); border-right: 1px solid var(--line); padding: 14px; display: grid; gap: 14px; align-content: start; }
 .editor-stage { background: #e9e7e1; overflow: auto; padding: 16px; display: flex; justify-content: center; }
 .preview-frame { background: #fff; box-shadow: 0 8px 30px rgb(0 0 0 / 0.15); border-radius: 12px; height: calc(100vh - 110px); width: 100%; transition: width 0.25s; }

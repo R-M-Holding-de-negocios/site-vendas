@@ -332,7 +332,8 @@ export default function Appearance() {
   const [data, setData] = useState<Lists & { variants: import('../lib/types').Variant[]; contents: Content[]; reviews: import('../lib/types').Review[] } | null>(null)
   const [theme, setTheme] = useState<Theme>(store.theme_draft ?? store.theme)
   const [undo, setUndo] = useState<Theme[]>([])
-  const [device, setDevice] = useState<'mobile' | 'desktop'>(matchMedia('(min-width: 980px)').matches ? 'desktop' : 'mobile')
+  const wide = matchMedia('(min-width: 980px)').matches
+  const [device, setDevice] = useState<'mobile' | 'desktop'>(wide ? 'desktop' : 'mobile')
   const [view, setView] = useState<'edit' | 'preview'>('edit')
   const [editing, setEditing] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
@@ -399,14 +400,14 @@ export default function Appearance() {
     <div className="editor">
       <div className="editor-top">
         <Link to="/painel" className="btn ghost small">← Painel</Link>
-        <b className="grow">Aparência {dirty ? <Badge tone="warn">Alterações não salvas</Badge> : unpublished ? <Badge tone="info">Rascunho</Badge> : null}</b>
-        <div className="row" role="group" aria-label="Tamanho da prévia">
+        <b className="grow hide-sm">Aparência {dirty ? <Badge tone="warn">Alterações não salvas</Badge> : unpublished ? <Badge tone="info">Rascunho</Badge> : null}</b>
+        <div className="row hide-sm" role="group" aria-label="Tamanho da prévia">
           <button className={`chip ${device === 'mobile' ? 'on' : ''}`} onClick={() => setDevice('mobile')} aria-pressed={device === 'mobile'}>Celular</button>
           <button className={`chip ${device === 'desktop' ? 'on' : ''}`} onClick={() => setDevice('desktop')} aria-pressed={device === 'desktop'}>Computador</button>
         </div>
         <button className="btn ghost small" disabled={!undo.length} onClick={() => { setTheme(undo.at(-1)!); setUndo(undo.slice(0, -1)) }}>Desfazer</button>
-        <button className="btn ghost small" onClick={() => setHistory(true)}>Versões</button>
-        <a className="btn ghost small" href={storeUrl(store.slug)} target="_blank" rel="noreferrer">Ver loja ↗</a>
+        <button className="btn ghost small hide-sm" onClick={() => setHistory(true)}>Versões</button>
+        <a className="btn ghost small hide-sm" href={storeUrl(store.slug)} target="_blank" rel="noreferrer">Ver loja ↗</a>
         <button className="btn ghost small" disabled={!dirty || busy} onClick={saveDraft}>Salvar rascunho</button>
         <button className="btn small" disabled={!unpublished || busy} onClick={publish}>Publicar</button>
       </div>
