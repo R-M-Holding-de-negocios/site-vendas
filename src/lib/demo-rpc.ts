@@ -114,6 +114,7 @@ export function demoRpc(s: DemoStore): Rpc {
 
       for (const it of q.items) {
         const p = s.rows('products').find((x) => x.id === it.product_id)!
+        s.update('products', p.id, { sold_count: (p.sold_count ?? 0) + it.qty })
         if (!p.track_stock) continue
         if (it.variant_id) {
           const v = s.rows('variants').find((x) => x.id === it.variant_id)!

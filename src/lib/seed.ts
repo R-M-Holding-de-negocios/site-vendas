@@ -163,6 +163,7 @@ export function seedDemo(s: DemoStore) {
       video_url: '',
       seo: { title: '', description: '' },
       blocked: false,
+      sold_count: 0,
       created_at: addDays(now, i === 1 ? -5 : -90).toISOString(),
       ...extra,
     }),
@@ -350,6 +351,10 @@ export function seedDemo(s: DemoStore) {
   s.save('checkouts')
   s.rows('orders').push(...orders)
   s.save('orders')
+  for (const p of products) {
+    const sold = orders.filter((o) => o.status !== 'cancelled').flatMap((o) => o.items).filter((i) => i.product_id === p.id).reduce((a, i) => a + i.qty, 0)
+    s.update('products', p.id, { sold_count: sold })
+  }
 
   s.insert('coupons', {
     store_id: store.id,

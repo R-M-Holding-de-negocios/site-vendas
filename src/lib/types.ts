@@ -119,6 +119,8 @@ export interface Product {
   seo: Seo
   /** Bloqueado pelo admin da plataforma (conteúdo proibido). */
   blocked: boolean
+  /** Unidades vendidas (atualizado pelo servidor a cada pedido); usado para ordenar por mais vendidos. */
+  sold_count: number
   created_at: string
 }
 
