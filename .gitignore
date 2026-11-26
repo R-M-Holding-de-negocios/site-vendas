@@ -1,13 +1,4 @@
-﻿node_modules/
-dist/
-.npm-cache/
-test-results/
-playwright-report/
-.qa/
-# Originais privados e arquivos locais
-images-makes/
+node_modules
+dist
 .env
-.env.*
-!.env.example
-*.log
-.vscode/
+.env.local
