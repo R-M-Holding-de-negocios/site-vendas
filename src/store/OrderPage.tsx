@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { db } from '../lib/api'
 import { startMercadoPagoCheckout } from '../lib/mercadopago'
+import { STATUS_LABEL } from '../lib/orders'
 import { pixPayload } from '../lib/pix'
 import { can } from '../lib/plans'
 import { PAY_LABEL } from '../lib/pricing'
@@ -11,16 +12,6 @@ import { CopyButton, QrImage } from '../ui/kit'
 import { useStore } from './context'
 import { useSeo } from './pages'
 
-export const STATUS_LABEL: Record<OrderStatus, string> = {
-  pending: 'Aguardando pagamento',
-  paid: 'Pago',
-  preparing: 'Em preparo',
-  ready: 'Pronto para retirada',
-  shipped: 'Enviado',
-  delivered: 'Entregue',
-  cancelled: 'Cancelado',
-  refunded: 'Devolvido',
-}
 
 function Review({ order, token }: { order: Order; token: string }) {
   const [rating, setRating] = useState<Record<string, number>>({})

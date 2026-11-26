@@ -1,0 +1,47 @@
+/* Complementos do painel do lojista. */
+.link-card { display: grid; gap: 14px; }
+@media (min-width: 700px) { .link-card { grid-template-columns: 1fr auto; align-items: center; } }
+.store-link { font-size: 1.05rem; font-weight: 700; word-break: break-all; }
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.toolbar input[type='search'] { flex: 1 1 220px; width: auto; }
+.toolbar select { width: auto; }
+.bulkbar { position: sticky; top: 8px; z-index: 6; background: var(--ink); color: #fff; border-radius: 10px; padding: 10px 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.bulkbar select, .bulkbar input { width: auto !important; min-height: 34px !important; color: var(--ink); }
+.var-table input { min-height: 34px !important; padding: 4px 8px !important; }
+.var-table td { padding: 6px 8px; }
+.md-toolbar { display: flex; gap: 4px; flex-wrap: wrap; }
+.md-toolbar button { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 6px; padding: 2px 10px; cursor: pointer; font-size: 0.85rem; min-height: 32px; }
+.status-pills { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+.order-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; font-size: 0.92rem; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+.zone-row { display: grid; grid-template-columns: 1fr 140px auto; gap: 8px; align-items: center; }
+.hours-row { display: grid; grid-template-columns: 90px auto 1fr 1fr; gap: 8px; align-items: center; }
+@media (max-width: 520px) { .hours-row { grid-template-columns: 80px auto 1fr; } .hours-row input:last-child { grid-column: 3; } }
+.editor { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
+.editor-top { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--surface); flex-wrap: wrap; }
+.editor-body { display: grid; grid-template-columns: 1fr; min-height: 0; }
+.editor-side { overflow-y: auto; background: var(--surface); border-right: 1px solid var(--line); padding: 14px; display: grid; gap: 14px; align-content: start; }
+.editor-stage { background: #e9e7e1; overflow: auto; padding: 16px; display: flex; justify-content: center; }
+.preview-frame { background: #fff; box-shadow: 0 8px 30px rgb(0 0 0 / 0.15); border-radius: 12px; height: calc(100vh - 110px); width: 100%; transition: width 0.25s; }
+.preview-frame.mobile { width: 390px; max-width: 100%; }
+.editor-mobile-tabs { display: flex; }
+@media (min-width: 980px) { .editor-body { grid-template-columns: 380px 1fr; } .editor-mobile-tabs { display: none; } }
+@media (max-width: 979px) { .editor-body[data-view='preview'] .editor-side { display: none; } .editor-body[data-view='edit'] .editor-stage { display: none; } }
+.sec-item { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.sec-item.off { opacity: 0.55; }
+.sec-item .grow { cursor: pointer; font-weight: 600; font-size: 0.92rem; }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.swatch { border: 1px solid var(--line); border-radius: 10px; padding: 10px; cursor: pointer; background: var(--surface); text-align: left; display: grid; gap: 6px; }
+.swatch.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.swatch .dots { display: flex; gap: 4px; }
+.swatch .dots span { width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgb(0 0 0 / 0.1); }
+.color-row { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+details.panel-group { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+details.panel-group > summary { padding: 12px 14px; cursor: pointer; font-weight: 700; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+details.panel-group > summary::after { content: '▾'; color: var(--muted); }
+details.panel-group[open] > summary::after { content: '▴'; }
+details.panel-group > div { padding: 0 14px 14px; display: grid; gap: 12px; }
+.item-list { display: grid; gap: 8px; }
+.item-box { border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: grid; gap: 8px; background: var(--surface-2); }
