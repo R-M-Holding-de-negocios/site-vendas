@@ -9,6 +9,10 @@ import { Ctx, type StoreCtx, type StoreData } from './context'
 import { BlogPage, ContentPage, HomePage, ListPage, PolicyPage, ProductPage } from './pages'
 import { StoreShell } from './StoreShell'
 
+/** Tudo menos o custo, que só o lojista vê (ver supabase/migrations/0003). */
+const PUBLIC_PRODUCT_COLUMNS =
+  'id,store_id,name,description,price_cents,promo_price_cents,promo_ends_at,images,category_ids,available,featured,position,sku,track_stock,stock,weight_g,height_cm,width_cm,length_cm,options,qty_discounts,video_url,seo,blocked,sold_count,created_at'
+
 const Checkout = lazy(() => import('./Checkout'))
 const OrderPage = lazy(() => import('./OrderPage'))
 
@@ -18,7 +22,7 @@ export async function loadStoreData(slug: string): Promise<StoreData | null> {
   const id = store.id
   const nowIso = new Date().toISOString()
   const [products, variants, categories, contents, reviews, plans] = await Promise.all([
-    db.list('products', { eq: { store_id: id, blocked: false } }),
+    db.list('products', { eq: { store_id: id, blocked: false }, columns: PUBLIC_PRODUCT_COLUMNS }).then((ps) => ps.map((p) => ({ ...p, cost_cents: null }))),
     db.list('variants', { eq: { store_id: id } }),
     db.list('categories', { eq: { store_id: id }, order: ['position', 'asc'] }),
     db.list('contents', { eq: { store_id: id, status: 'published' } }),

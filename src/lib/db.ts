@@ -65,6 +65,8 @@ export interface Query {
   lt?: [string, string | number]
   order?: [string, 'asc' | 'desc']
   limit?: number
+  /** Colunas a ler (padrão: todas). A loja pública não lê o custo dos produtos. */
+  columns?: string
 }
 
 export interface PlaceOrderArgs {

@@ -1,7 +1,8 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Db, Query, TableName, Tables } from './db'
 
-const PAGE = 1000 // limite de linhas por requisição do Supabase
+const PAGE = 1000
+const WRITE_ONLY: string[] = ['events', 'leads', 'stock_alerts'] // limite de linhas por requisição do Supabase
 
 const translate = (e: { message: string; code?: string }) => {
   if (e.code === '23505') return new Error('Esse endereço ou código já está em uso. Escolha outro.')
@@ -19,7 +20,7 @@ export function supabaseDb(url: string, key: string): Db {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function build(table: string, q: Query = {}, from?: number, to?: number): any {
-    let r = sb.from(table).select('*')
+    let r = sb.from(table).select(q.columns ?? '*')
     for (const [k, v] of Object.entries(q.eq ?? {})) r = v === null ? r.is(k, null) : r.eq(k, v)
     if (q.in) r = r.in(q.in[0], q.in[1])
     if (q.gte) r = r.gte(q.gte[0], q.gte[1])
@@ -57,6 +58,12 @@ export function supabaseDb(url: string, key: string): Db {
       return data
     },
     async insert(table, row) {
+      // Visitantes podem gravar estes registros, mas não lê-los de volta.
+      if (WRITE_ONLY.includes(table) && !(await sb.auth.getSession()).data.session) {
+        const { error } = await sb.from(table).insert(row as never)
+        if (error) throw translate(error)
+        return row as never
+      }
       const { data, error } = await sb.from(table).insert(row as never).select('*').single()
       if (error) throw translate(error)
       return data
