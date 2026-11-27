@@ -31,8 +31,11 @@ Decisões que o planejamento deixava em aberto ou que surgiram ao construir. Tod
 | Teste grátis ou mensalidade vencidos | 7 dias de tolerância com avisos em todas as telas do painel e lembrete diário; depois a loja vira plano Vitrine até o pagamento (migração 0005). Suspensão continua manual | A loja não some do ar, os dados ficam guardados e o lojista tem motivo para pagar |
 | Boleto no Mercado Pago | Desligado | Compensa em até 3 dias úteis e o pedido com Mercado Pago é cancelado em 24 horas |
 
+| Efeitos animados da loja | Implementação própria em `src/store/fx.tsx` e `src/styles/fx.css`, sem bibliotecas | Os componentes do React Bits têm licença MIT + Commons Clause, que não permite revender o código como parte de um produto; os efeitos são ideias comuns e foram reescritos do zero, leves e sem dependências |
+| Efeitos e acessibilidade | Tudo desliga com Animações: desligadas e com reduzir movimento do aparelho; partículas pausam fora da tela | Desempenho em celular simples e conforto de quem enjoa com movimento |
+
 ## O que ainda não foi testado com contas reais
 
-- Banco de dados: testado em Postgres 16 e PGlite com um simulador do Supabase, não num projeto Supabase real.
+- Banco de dados: as 5 migrações e um teste de ponta a ponta (`npm run test:supabase`) passaram num Supabase local (Docker, Postgres 17), e as 4 funções do Mercado Pago iniciaram e responderam no runtime local. Falta o projeto Supabase real na nuvem.
 - Mercado Pago: lógica testada com respostas simuladas; a documentação oficial não pôde ser aberta deste ambiente. Ver `docs/mercado-pago.md`.
 - Prévia de links no Cloudflare: lógica testada; não foi publicada.
