@@ -1,0 +1,20 @@
+# Configuração mínima para a Supabase CLI (`supabase link`, `supabase db push`,
+# `supabase functions deploy`). Os demais valores ficam no padrão da CLI.
+project_id = "vitrine"
+
+# Estas três funções são chamadas sem login (o navegador voltando do Mercado Pago,
+# o cliente da loja e os avisos do Mercado Pago). Cada uma tem a própria proteção:
+# ver docs/mercado-pago.md. Com isto, um `supabase functions deploy` sem
+# --no-verify-jwt não quebra o pagamento online.
+[functions.mp-oauth-callback]
+verify_jwt = false
+
+[functions.mp-create-preference]
+verify_jwt = false
+
+[functions.mp-webhook]
+verify_jwt = false
+
+# Exige o login do lojista (padrão).
+[functions.mp-oauth-start]
+verify_jwt = true

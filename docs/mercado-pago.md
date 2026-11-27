@@ -37,9 +37,10 @@ Use a conta do Mercado Pago **da plataforma** (é nela que a taxa vai cair).
    - Eventos: marque **Pagamentos**.
    - Salve e clique em **revelar a assinatura secreta**. Anote: é o `MP_WEBHOOK_SECRET`.
 
-   Observação: cada pagamento também informa ao Mercado Pago o endereço de aviso com o
-   código da loja (`mp-webhook?store_id=...`). É esse aviso que a Vitrine usa; a URL
-   configurada no painel serve de reserva.
+   Observação: cada pagamento informa ao Mercado Pago o endereço de aviso com o código da
+   loja (`mp-webhook?store_id=...`). É esse aviso que a Vitrine usa. Os avisos que chegam
+   pela URL do painel (sem o código da loja) são respondidos com 200 e ignorados; ela é
+   necessária para gerar a assinatura secreta e para o botão de simular aviso.
 
 ## 2. Configurar os segredos no Supabase
 
@@ -84,6 +85,9 @@ e ligue a pasta ao projeto com `supabase link --project-ref SEU-PROJETO`. Depois
 ```bash
 # tabelas oauth_states e a função payment_connections
 supabase db push
+
+# supabase/config.toml já marca quais funções dispensam o login (verify_jwt = false);
+# as flags abaixo repetem isso para quem publicar com uma CLI antiga.
 
 # exige login do lojista (verificação de JWT ligada, que é o padrão)
 supabase functions deploy mp-oauth-start
@@ -142,7 +146,17 @@ sozinho junto com o site (Pages Functions).
 
 Funciona para: `/loja`, `/loja/p/<produto>`, `/loja/c/<categoria>` e `/loja/blog/<post>`.
 Qualquer outro endereço (painel, arquivos, páginas desconhecidas) é servido sem mudança.
+O arquivo `public/_routes.json` faz o Cloudflare nem chamar a função para os arquivos de
+`/assets/` (mais rápido e não gasta a cota de chamadas).
 Lojas suspensas e produtos bloqueados não mostram prévia.
+
+## Pagamento que chega depois do cancelamento automático
+
+Pedidos com Mercado Pago que ficam 24 horas sem pagamento são cancelados e o estoque volta
+(`supabase/cron.sql`). Se o Mercado Pago aprovar o pagamento depois disso (por exemplo, um
+boleto pago no último dia), o pedido **continua cancelado**, mas o pagamento fica registrado
+nele com a nota "Pagamento aprovado no Mercado Pago depois do cancelamento automático". O
+lojista vê isso no pedido e decide: enviar mesmo assim ou devolver o valor pelo Mercado Pago.
 
 ## Perguntas comuns
 

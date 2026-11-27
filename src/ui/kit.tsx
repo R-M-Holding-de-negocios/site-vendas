@@ -281,7 +281,7 @@ export function ImagePicker({ storeId, value, onChange, max = 1, label = 'Imagem
           </div>
         )}
       </div>
-      <input ref={input} type="file" accept="image/*" multiple={max > 1} hidden onChange={(e) => onFiles(e.target.files)} />
+      <input ref={input} type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple={max > 1} hidden onChange={(e) => onFiles(e.target.files)} />
       {err && <span className="field-error">{err}</span>}
       {library && (
         <MediaLibrary

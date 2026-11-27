@@ -30,7 +30,7 @@ Para tirar alguém do admin: `delete from public.platform_admins where user_id =
 
 ## 3. Tarefa agendada (`supabase/cron.sql`)
 
-Pedidos pagos por Pix ou Mercado Pago que ficam **24 horas** sem confirmação de pagamento são cancelados automaticamente, o estoque volta e o histórico do pedido recebe a nota "Pagamento não confirmado em 24 horas". Pedidos em dinheiro, cartão na entrega ou WhatsApp não são tocados.
+Pedidos pagos por **Mercado Pago** que ficam **24 horas** sem confirmação de pagamento são cancelados automaticamente, o estoque volta e o histórico do pedido recebe a nota "Pagamento não confirmado em 24 horas". Pedidos em Pix direto, dinheiro, cartão na entrega ou WhatsApp não são tocados: o Pix direto é confirmado à mão pelo lojista, que cancela os que não forem pagos (até a migração 0004 o Pix também era cancelado sozinho, e o lojista perdia pedidos pagos que confirmava atrasado).
 
 Para ligar: ative a extensão **pg_cron** (Database > Extensions) e rode `supabase/cron.sql` no SQL Editor. Ele agenda `public.expire_pending_orders()` a cada 15 minutos e pode ser rodado de novo sem duplicar o agendamento.
 
@@ -41,7 +41,9 @@ Para ligar: ative a extensão **pg_cron** (Database > Extensions) e rode `supaba
 - A situação do pedido só muda por `set_order_status` (que devolve o estoque ao cancelar e não reabre pedido cancelado).
 - `place_order` recalcula tudo pelos preços do banco (o valor enviado pelo navegador é ignorado), trava estoque e numeração para não vender o mesmo item duas vezes e só aceita Mercado Pago quando a loja conectou a conta.
 - Chaves de pagamento ficam em `store_secrets`, que nenhum usuário lê pela API.
+- O custo do produto (`cost_cents`) não é lido direto por ninguém pela API (visitantes desde a 0003; usuários logados desde a 0004). O painel busca o custo dos próprios produtos pela função `product_costs`, que só responde ao dono da loja e ao admin.
+- A pasta de imagens aceita só JPEG, PNG, WebP e GIF de até 5 MB (SVG pode carregar script).
 
 ## Testes
 
-`npm test` roda os testes em `tests/sql` num Postgres de verdade (PGlite, dentro do Node), com uma imitação mínima do Supabase em `tests/sql/supabase-stub.sql`. Eles conferem que o banco calcula os pedidos exatamente como `src/lib/pricing.ts` e segue as mesmas regras do modo demonstração.
+`npm test` aplica todas as migrações de `supabase/migrations`, em ordem, e roda os testes em `tests/sql` num Postgres de verdade (PGlite, dentro do Node), com uma imitação mínima do Supabase em `tests/sql/supabase-stub.sql`. Eles conferem que o banco calcula os pedidos exatamente como `src/lib/pricing.ts` e segue as mesmas regras do modo demonstração.

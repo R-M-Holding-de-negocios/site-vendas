@@ -49,7 +49,12 @@ export function storeUrl(slug: string, path = '') {
 
 /** Reduz a foto (máx. 1200px, JPEG) antes de enviar. É o que mantém o armazenamento barato. */
 export async function shrinkImage(file: File, max = 1200): Promise<Blob> {
-  if (file.type === 'image/svg+xml' || file.type === 'image/gif') return file
+  // SVG pode carregar script; a pasta de imagens só aceita fotos (migração 0004).
+  if (file.type === 'image/svg+xml') throw new Error('Envie a imagem em JPG, PNG, WebP ou GIF.')
+  if (file.type === 'image/gif') {
+    if (file.size > 5 * 1024 * 1024) throw new Error('GIF muito grande: o limite é 5 MB.')
+    return file
+  }
   const img = await createImageBitmap(file)
   const scale = Math.min(1, max / Math.max(img.width, img.height))
   const canvas = document.createElement('canvas')

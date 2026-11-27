@@ -23,6 +23,12 @@ Decisões que o planejamento deixava em aberto ou que surgiram ao construir. Tod
 | Mais vendidos | Contador `sold_count` no produto, atualizado pelo servidor | Visitantes não podem ler pedidos |
 | Formatação de textos | Formatação simples (títulos, negrito, listas, links, imagens); HTML é bloqueado | Segurança |
 | Admin | Exige verificação em duas etapas | O painel do admin acessa todas as lojas |
+| Cancelamento automático (24 h) | Só pedidos com Mercado Pago; Pix direto fica para o lojista cancelar (migração 0004) | Pedido cancelado não reabre; com Pix confirmado à mão, o lojista perdia pedidos pagos que confirmava atrasado |
+| Pagamento aprovado depois do cancelamento | O pedido continua cancelado, mas o pagamento e uma nota ficam registrados para o lojista decidir | Reabrir sozinho poderia vender estoque que já voltou para a loja |
+| Custo do produto | Ninguém lê a coluna direto; o painel usa a função `product_costs` (migração 0004) | Permissão por coluna não distingue o dono da loja, e qualquer conta logada lia o custo das outras lojas |
+| Imagens | Só JPEG, PNG, WebP e GIF até 5 MB; SVG recusado | SVG pode carregar script |
+| Estoque fora do Pro | Quem já controlava estoque (ex.: depois do teste) pode repor ou desligar o controle | Sem isso o produto ficava esgotado para sempre |
+| Teste grátis ou mensalidade vencidos | O painel avisa; o servidor não bloqueia nem muda o plano sozinho | Mantém a suspensão manual pelo admin (ver PENDENCIAS) |
 
 ## O que ainda não foi testado com contas reais
 
