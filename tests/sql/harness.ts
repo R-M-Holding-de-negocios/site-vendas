@@ -1,14 +1,18 @@
 // Banco Postgres de verdade (PGlite) com a migração aplicada, e atalhos para
 // agir como visitante (anon), lojista (authenticated) ou admin (aal2).
 import { PGlite } from '@electric-sql/pglite'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { defaultSettings, defaultTheme } from '../../src/lib/theme'
 import type { PlanId, StoreSettings } from '../../src/lib/types'
 
 const read = (rel: string) => readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8')
 const STUB = read('./supabase-stub.sql')
-const MIGRATION = read('../../supabase/migrations/0001_init.sql')
+// Todas as migrações, em ordem de número, como no Supabase.
+const MIGRATIONS = readdirSync(fileURLToPath(new URL('../../supabase/migrations/', import.meta.url)))
+  .filter((f) => f.endsWith('.sql'))
+  .sort()
+  .map((f) => read('../../supabase/migrations/' + f))
 
 export type Who =
   | { role: 'anon' }
@@ -25,7 +29,7 @@ export class TestDb {
   static async create() {
     const pg = new PGlite()
     await pg.exec(STUB)
-    await pg.exec(MIGRATION)
+    for (const m of MIGRATIONS) await pg.exec(m)
     return new TestDb(pg)
   }
 

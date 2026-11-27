@@ -269,6 +269,51 @@ describe('armazenamento de imagens', () => {
   })
 })
 
+describe('custo do produto (migração 0004)', () => {
+  it('outro lojista logado não lê o custo, nem com select *', async () => {
+    expect(await errorOf(db.q(B.who, `select cost_cents from products where id = $1`, [ids.aproduct]))).toMatch(/permission denied/)
+    expect(await errorOf(db.q(B.who, `select * from products where id = $1`, [ids.aproduct]))).toMatch(/permission denied/)
+    expect(await errorOf(db.q(anon, `select cost_cents from products`))).toMatch(/permission denied/)
+    // mas lê a vitrine com as colunas públicas
+    expect(await count(B.who, `select id, name, price_cents from products where id = $1`, [ids.aproduct])).toBe(1)
+  })
+
+  it('product_costs devolve o custo só dos produtos do próprio lojista', async () => {
+    const both = { ids: [ids.aproduct, ids.bproduct] }
+    expect(await db.rpc(A.who, 'product_costs', both)).toEqual({ [ids.aproduct]: 400 })
+    expect(await db.rpc(B.who, 'product_costs', both)).toEqual({ [ids.bproduct]: 400 })
+    expect(await errorOf(db.rpc(anon, 'product_costs', both))).toMatch(/permission denied/)
+  })
+
+  it('o lojista grava o custo e lê o produto de volta sem a coluna', async () => {
+    const [r] = await db.q<{ id: string }>(A.who, `update products set cost_cents = 450, name = 'P2' where id = $1 returning id, name`, [ids.aproduct])
+    expect(r.id).toBe(ids.aproduct)
+    expect(await db.rpc(A.who, 'product_costs', { ids: [ids.aproduct] })).toEqual({ [ids.aproduct]: 450 })
+    const [n] = await db.q<{ id: string }>(A.who, `insert into products (store_id, name, cost_cents) values ($1, 'Novo', 10) returning id`, [A.storeId])
+    expect(await db.rpc(A.who, 'product_costs', { ids: [n.id] })).toEqual({ [n.id]: 10 })
+  })
+
+  it('o admin (aal2) lê o custo pela função', async () => {
+    const adminId = await db.createUser('custo-admin@x.com')
+    await db.makeAdmin(adminId)
+    expect(await db.rpc(user(adminId, 'aal2'), 'product_costs', { ids: [ids.bproduct] })).toEqual({ [ids.bproduct]: 400 })
+    expect(await db.rpc(user(adminId, 'aal1'), 'product_costs', { ids: [ids.bproduct] })).toEqual({})
+  })
+})
+
+describe('imagens (migração 0004)', () => {
+  it('a pasta media aceita só imagens comuns de até 5 MB (sem SVG)', async () => {
+    const [b] = await db.q<{ file_size_limit: number; allowed_mime_types: string[] }>(superuser, `select file_size_limit, allowed_mime_types from storage.buckets where id = 'media'`)
+    expect(Number(b.file_size_limit)).toBe(5 * 1024 * 1024)
+    expect(b.allowed_mime_types).toEqual(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
+  })
+
+  it('payment_connections tem search_path fixo com pg_temp', async () => {
+    const [f] = await db.q<{ cfg: string[] }>(superuser, `select proconfig cfg from pg_proc where proname = 'payment_connections'`)
+    expect(f.cfg).toEqual(['search_path=public, pg_temp'])
+  })
+})
+
 describe('tempo real', () => {
   it('a tabela de pedidos está na publicação supabase_realtime', async () => {
     expect(await count(superuser, `select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = 'orders'`)).toBe(1)

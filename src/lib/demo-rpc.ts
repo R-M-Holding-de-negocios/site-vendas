@@ -321,6 +321,14 @@ export function demoRpc(s: DemoStore): Rpc {
       s.insert('announcements', { title: a.title, body: a.body })
     },
 
+    async product_costs(a) {
+      const u = me()
+      const mine = new Set(s.rows('stores').filter((x) => x.owner_id === u.id || s.isAdmin()).map((x) => x.id))
+      const out: Record<string, number> = {}
+      for (const p of s.rows('products')) if (a.ids.includes(p.id) && mine.has(p.store_id) && p.cost_cents != null) out[p.id] = p.cost_cents
+      return out
+    },
+
     async payment_connections(a) {
       const st = s.rows('stores').find((x) => x.id === a.store_id)
       return { mercadopago: !!st?.settings?.payments?.mercadopago?.enabled }

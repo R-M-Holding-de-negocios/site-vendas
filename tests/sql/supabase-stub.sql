@@ -47,6 +47,8 @@ create table storage.buckets (
   id text primary key,
   name text not null unique,
   public boolean default false,
+  file_size_limit bigint,
+  allowed_mime_types text[],
   created_at timestamptz default now()
 );
 

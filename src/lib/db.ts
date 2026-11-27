@@ -128,6 +128,8 @@ export interface Rpc {
   admin_announce(a: { title: string; body: string }): Promise<void>
   /** Contas de pagamento online conectadas pela loja (nunca devolve os tokens). */
   payment_connections(a: { store_id: string }): Promise<{ mercadopago: boolean }>
+  /** Custo dos produtos da própria loja (ou de qualquer loja, para o admin): { id: centavos }. */
+  product_costs(a: { ids: string[] }): Promise<Record<string, number>>
 }
 
 export interface User {

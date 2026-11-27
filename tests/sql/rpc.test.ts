@@ -209,7 +209,7 @@ describe('delete_my_store', () => {
 })
 
 describe('expire_pending_orders', () => {
-  it('cancela Pix/Mercado Pago pendentes há mais de 24 horas e devolve o estoque', async () => {
+  it('cancela Mercado Pago pendente há mais de 24 horas e devolve o estoque; Pix direto e dinheiro ficam para o lojista', async () => {
     const m = await db.merchant('expira', 'pro', withCashAndPix())
     const p = await db.insert<Product>('products', { store_id: m.storeId, name: 'X', price_cents: 1000, track_stock: true, stock: 10 })
     const place = (method: string) =>
@@ -218,20 +218,24 @@ describe('expire_pending_orders', () => {
         customer: { name: 'Ana', phone: '19988887777', email: '' }, shipping: { method: 'pickup', address: null },
         payment: { method }, coupon: '', notes: '', source: null, checkout_id: null,
       })
+    const oldMp = await place('pix')
+    const newMp = await place('pix')
     const oldPix = await place('pix')
-    const newPix = await place('pix')
     const oldCash = await place('cash')
-    await db.q(superuser, `update orders set created_at = now() - interval '25 hours' where id = any($1)`, [[oldPix.id, oldCash.id]])
+    // place_order só aceita Mercado Pago com conta conectada; aqui basta o método gravado.
+    await db.q(superuser, `update orders set payment = jsonb_set(payment, '{method}', '"mercadopago"') where id = any($1)`, [[oldMp.id, newMp.id]])
+    await db.q(superuser, `update orders set created_at = now() - interval '25 hours' where id = any($1)`, [[oldMp.id, oldPix.id, oldCash.id]])
     const [{ n }] = await db.q<{ n: number }>(superuser, `select public.expire_pending_orders() n`)
     expect(n).toBe(1)
     const rows = await db.rows<Order>(superuser, `select * from orders where store_id = $1`, [m.storeId])
     const by = (id: string) => rows.find((o) => o.id === id)!
-    expect(by(oldPix.id).status).toBe('cancelled')
-    expect(by(oldPix.id).history.at(-1)).toMatchObject({ status: 'cancelled', note: 'Pagamento não confirmado em 24 horas' })
-    expect(by(newPix.id).status).toBe('pending')
+    expect(by(oldMp.id).status).toBe('cancelled')
+    expect(by(oldMp.id).history.at(-1)).toMatchObject({ status: 'cancelled', note: 'Pagamento não confirmado em 24 horas' })
+    expect(by(newMp.id).status).toBe('pending')
+    expect(by(oldPix.id).status).toBe('pending')
     expect(by(oldCash.id).status).toBe('pending')
     const [{ stock }] = await db.q<{ stock: number }>(superuser, `select stock from products where id = $1`, [p.id])
-    expect(stock).toBe(6)
+    expect(stock).toBe(4)
   })
 })
 

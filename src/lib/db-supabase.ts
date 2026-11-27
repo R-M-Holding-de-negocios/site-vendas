@@ -4,6 +4,11 @@ import type { Db, Query, TableName, Tables } from './db'
 const PAGE = 1000 // limite de linhas por requisição do Supabase
 const WRITE_ONLY: string[] = ['events', 'leads', 'stock_alerts']
 
+/** Colunas de products que qualquer um pode ler; o custo vem à parte (migração 0004). */
+export const PRODUCT_COLUMNS =
+  'id,store_id,name,description,price_cents,promo_price_cents,promo_ends_at,images,category_ids,available,featured,position,sku,track_stock,stock,weight_g,height_cm,width_cm,length_cm,options,qty_discounts,video_url,seo,blocked,sold_count,created_at'
+const cols = (table: string) => (table === 'products' ? PRODUCT_COLUMNS : '*') as '*' // o tipo '*' mantém o retorno sem inferência de colunas
+
 const translate = (e: { message: string; code?: string }) => {
   if (e.code === '23505') return new Error('Esse endereço ou código já está em uso. Escolha outro.')
   if (e.code === '42501') return new Error('Você não tem permissão para fazer isso.')
@@ -20,7 +25,7 @@ export function supabaseDb(url: string, key: string): Db {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function build(table: string, q: Query = {}, from?: number, to?: number): any {
-    let r = sb.from(table).select(q.columns ?? '*')
+    let r = sb.from(table).select(q.columns ?? cols(table))
     for (const [k, v] of Object.entries(q.eq ?? {})) r = v === null ? r.is(k, null) : r.eq(k, v)
     if (q.in) r = r.in(q.in[0], q.in[1])
     if (q.gte) r = r.gte(q.gte[0], q.gte[1])
@@ -36,26 +41,42 @@ export function supabaseDb(url: string, key: string): Db {
     return u ? { id: u.id, email: u.email ?? '' } : null
   }
 
+  /** Completa cost_cents dos produtos do próprio lojista (para os outros, fica null). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function withCosts<R>(table: string, rows: R[]): Promise<R[]> {
+    if (table !== 'products' || !rows.length) return rows
+    const costs: Record<string, number> = {}
+    if ((await sb.auth.getSession()).data.session) {
+      const ids = rows.map((r) => (r as { id: string }).id)
+      for (let i = 0; i < ids.length; i += 500) {
+        const { data, error } = await sb.rpc('product_costs', { a: { ids: ids.slice(i, i + 500) } })
+        if (error) throw translate(error)
+        Object.assign(costs, data)
+      }
+    }
+    return rows.map((r) => ({ ...r, cost_cents: costs[(r as { id: string }).id] ?? null }))
+  }
+
   return {
     demo: false,
     async list<T extends TableName>(table: T, q: Query = {}) {
       if (q.limit) {
         const { data, error } = await build(table, q)
         if (error) throw translate(error)
-        return data as Tables[T][]
+        return (q.columns ? data : await withCosts(table, data)) as Tables[T][]
       }
       const out: Tables[T][] = []
       for (let from = 0; ; from += PAGE) {
         const { data, error } = await build(table, { ...q, order: q.order ?? ['id', 'asc'] }, from, from + PAGE - 1)
         if (error) throw translate(error)
         out.push(...(data as Tables[T][]))
-        if (data.length < PAGE) return out
+        if (data.length < PAGE) return (q.columns ? out : await withCosts(table, out)) as Tables[T][]
       }
     },
     async get(table, id) {
-      const { data, error } = await sb.from(table).select('*').eq('id', id).maybeSingle()
+      const { data, error } = await sb.from(table).select(cols(table)).eq('id', id).maybeSingle()
       if (error) throw translate(error)
-      return data
+      return data ? (await withCosts(table, [data]))[0] : data
     },
     async insert(table, row) {
       // Visitantes (inclusive quem está logado e visita outra loja) podem gravar estes registros,
@@ -65,14 +86,14 @@ export function supabaseDb(url: string, key: string): Db {
         if (error) throw translate(error)
         return row as never
       }
-      const { data, error } = await sb.from(table).insert(row as never).select('*').single()
+      const { data, error } = await sb.from(table).insert(row as never).select(cols(table)).single()
       if (error) throw translate(error)
-      return data
+      return (await withCosts(table, [data]))[0]
     },
     async update(table, id, patch) {
-      const { data, error } = await sb.from(table).update(patch as never).eq('id', id).select('*').single()
+      const { data, error } = await sb.from(table).update(patch as never).eq('id', id).select(cols(table)).single()
       if (error) throw translate(error)
-      return data
+      return (await withCosts(table, [data]))[0]
     },
     async remove(table, id) {
       const { error } = await sb.from(table).delete().eq('id', id)
