@@ -123,10 +123,11 @@ function Carts() {
   const recovered = (data.data ?? []).filter((c) => c.order_id && c.contacted_at)
   const msg = (c: (typeof abandoned)[number]) =>
     text
-      .replace('{nome}', c.customer.name.split(' ')[0] || '')
-      .replace('{itens}', c.items.map((i) => `${i.qty}x ${i.name}`).join(', '))
-      .replace('{loja}', store.name)
-      .replace('{link}', storeUrl(store.slug, `?carrinho=${encodeURIComponent(encodeCart(c.items))}`))
+      .replaceAll('{nome}', c.customer.name.split(' ')[0] || '')
+      .replaceAll('{itens}', c.items.map((i) => `${i.qty}x ${i.name}`).join(', '))
+      .replaceAll('{loja}', store.name)
+      // rc= liga o pedido feito pelo link a este carrinho, para contar como recuperado.
+      .replaceAll('{link}', storeUrl(store.slug, `?carrinho=${encodeURIComponent(encodeCart(c.items))}&rc=${c.id}`))
   return (
     <div className="stack">
       <div className="stats">
@@ -150,9 +151,13 @@ function Carts() {
                 <span className="small muted">{fmtDateTime(c.updated_at)} · {c.items.map((i) => `${i.qty}x ${i.name}`).join(', ')}</span>
               </div>
               {c.contacted_at && <Badge>Contatado</Badge>}
-              <a className="btn wa small" href={waLink(c.customer.phone, msg(c))} target="_blank" rel="noreferrer" onClick={() => db.update('checkouts', c.id, { contacted_at: new Date().toISOString() }).then(data.reload)}>
-                Chamar
-              </a>
+              {c.customer.phone ? (
+                <a className="btn wa small" href={waLink(c.customer.phone, msg(c))} target="_blank" rel="noreferrer" onClick={() => db.update('checkouts', c.id, { contacted_at: new Date().toISOString() }).then(data.reload)}>
+                  Chamar
+                </a>
+              ) : (
+                <span className="small muted">Sem WhatsApp</span>
+              )}
             </div>
           ))}
         </div>

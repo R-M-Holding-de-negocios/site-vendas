@@ -293,8 +293,11 @@ export default function ProductForm() {
 
           <section className="card form-section">
             <h2>Estoque</h2>
-            {pro ? (
+            {/* Fora do Pro, quem já controlava estoque (ex.: depois do teste grátis) ainda pode
+                repor a quantidade ou desligar o controle; senão o produto ficaria esgotado. */}
+            {pro || p.track_stock ? (
               <>
+                {!pro && <p className="muted small">O controle de estoque é do plano Pro. Você pode repor a quantidade ou desligar o controle.</p>}
                 <Toggle checked={p.track_stock} onChange={(v) => set('track_stock', v)} label="Controlar estoque" hint="A cada venda a quantidade baixa sozinha; no zero, o produto esgota." />
                 {p.track_stock && !p.options.length && (
                   <Field label="Quantidade em estoque">

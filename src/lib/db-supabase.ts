@@ -1,8 +1,8 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Db, Query, TableName, Tables } from './db'
 
-const PAGE = 1000
-const WRITE_ONLY: string[] = ['events', 'leads', 'stock_alerts'] // limite de linhas por requisição do Supabase
+const PAGE = 1000 // limite de linhas por requisição do Supabase
+const WRITE_ONLY: string[] = ['events', 'leads', 'stock_alerts']
 
 const translate = (e: { message: string; code?: string }) => {
   if (e.code === '23505') return new Error('Esse endereço ou código já está em uso. Escolha outro.')
@@ -58,8 +58,9 @@ export function supabaseDb(url: string, key: string): Db {
       return data
     },
     async insert(table, row) {
-      // Visitantes podem gravar estes registros, mas não lê-los de volta.
-      if (WRITE_ONLY.includes(table) && !(await sb.auth.getSession()).data.session) {
+      // Visitantes (inclusive quem está logado e visita outra loja) podem gravar estes registros,
+      // mas não lê-los de volta: pedir a linha de volta faria o banco recusar a gravação.
+      if (WRITE_ONLY.includes(table)) {
         const { error } = await sb.from(table).insert(row as never)
         if (error) throw translate(error)
         return row as never
@@ -105,8 +106,14 @@ export function supabaseDb(url: string, key: string): Db {
         await sb.auth.signOut()
       },
       async resetPassword(email) {
-        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/entrar' })
+        // O link do e-mail abre a tela de nova senha (o Supabase entra com a sessão de recuperação).
+        const redirectTo = `${location.origin}${import.meta.env.BASE_URL.replace(/\/$/, '')}/entrar?nova-senha=1`
+        const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo })
         if (error) throw new Error(error.message)
+      },
+      async updatePassword(password) {
+        const { error } = await sb.auth.updateUser({ password })
+        if (error) throw new Error(/session/i.test(error.message) ? 'O link expirou. Peça um novo em "Esqueci a senha".' : error.message)
       },
       mfa: {
         async status() {

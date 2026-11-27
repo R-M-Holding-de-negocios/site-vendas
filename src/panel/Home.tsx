@@ -6,6 +6,7 @@ import type { Announcement, Order, Product } from '../lib/types'
 import { addDays, brl, fmtDate, plural } from '../lib/util'
 import { Badge, CopyButton, Loading, PageHead, QrImage, Stat, useAsync } from '../ui/kit'
 import { usePanel } from './PanelApp'
+import { situation } from '../admin/logic'
 
 export default function Home() {
   const { store } = usePanel()
@@ -42,6 +43,18 @@ export default function Home() {
   const paidToday = (data.data?.orders ?? []).filter((o) => o.paid_at?.slice(0, 10) === today && o.status !== 'cancelled' && o.status !== 'refunded')
   const lowStock = products.filter((p: Product) => p.track_stock && !p.options.length && p.stock <= 3)
   const trialDays = store.status === 'trial' && store.trial_ends_at ? Math.ceil((new Date(store.trial_ends_at).getTime() - Date.now()) / 86400000) : null
+  // Mesma regra do painel do admin: o vencimento conta mesmo que ninguém tenha mudado o status.
+  const sit = situation(store)
+  const billingWarning =
+    sit === 'suspended'
+      ? 'Sua loja está suspensa: o link não abre para os clientes. Regularize o plano ou fale com o suporte.'
+      : sit === 'overdue'
+        ? 'Sua mensalidade está em atraso. Regularize para a loja não ser suspensa.'
+        : sit === 'trial_expired'
+          ? 'Seu teste grátis terminou. Escolha um plano para continuar vendendo.'
+          : trialDays != null && trialDays <= 3
+            ? 'Seu teste grátis está acabando. Escolha um plano para continuar vendendo.'
+            : ''
 
   async function downloadQr() {
     const a = document.createElement('a')
@@ -54,9 +67,9 @@ export default function Home() {
   return (
     <div className="stack">
       <PageHead title={`Olá, ${store.name}`} sub={<>Plano {planName(store.plan)}{trialDays != null && ` · teste grátis: ${trialDays > 0 ? plural(trialDays, 'dia restante', 'dias restantes') : 'terminou'}`}</>} />
-      {(store.status === 'overdue' || (trialDays != null && trialDays <= 3)) && (
-        <div className="alert warn">
-          {store.status === 'overdue' ? 'Sua mensalidade está em atraso. Regularize para a loja não ser suspensa.' : 'Seu teste grátis está acabando. Escolha um plano para continuar vendendo.'}
+      {billingWarning && (
+        <div className="alert warn" role="status">
+          {billingWarning}
           <Link to="/painel/plano">Ver plano</Link>
         </div>
       )}

@@ -12,6 +12,34 @@ import { CopyButton, QrImage } from '../ui/kit'
 import { useStore } from './context'
 import { useSeo } from './pages'
 
+function MercadoPagoRetry({ orderId, token, slug }: { orderId: string; token: string; slug: string }) {
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  function pay() {
+    setBusy(true)
+    setErr('')
+    startMercadoPagoCheckout(orderId, token, slug).then(
+      (u) => {
+        if (/^https?:/.test(u)) location.href = u
+        else setBusy(false)
+      },
+      (e: Error) => {
+        setErr(e.message || 'Não foi possível abrir o Mercado Pago. Tente de novo em instantes.')
+        setBusy(false)
+      },
+    )
+  }
+  return (
+    <section className="step">
+      <p>O pagamento ainda não foi confirmado.</p>
+      <button className="sbtn" onClick={pay} disabled={busy}>
+        {busy ? 'Abrindo o Mercado Pago…' : 'Pagar agora'}
+      </button>
+      {err && <p className="warn-text" role="alert">{err}</p>}
+    </section>
+  )
+}
+
 
 function Review({ order, token }: { order: Order; token: string }) {
   const [rating, setRating] = useState<Record<string, number>>({})
@@ -116,12 +144,7 @@ export default function OrderPage() {
           </section>
         )}
         {order.payment.method === 'mercadopago' && pending && !params.get('simulado') && (
-          <section className="step">
-            <p>O pagamento ainda não foi confirmado.</p>
-            <button className="sbtn" onClick={() => startMercadoPagoCheckout(order.id, token, store.slug).then((u) => (/^https?:/.test(u) ? (location.href = u) : undefined))}>
-              Pagar agora
-            </button>
-          </section>
+          <MercadoPagoRetry orderId={order.id} token={token} slug={store.slug} />
         )}
 
         <section className="step">

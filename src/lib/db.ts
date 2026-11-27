@@ -152,6 +152,8 @@ export interface Db {
     signIn(email: string, password: string): Promise<void>
     signOut(): Promise<void>
     resetPassword(email: string): Promise<void>
+    /** Troca a senha de quem entrou pelo link de recuperação (ou já está logado). */
+    updatePassword(password: string): Promise<void>
     /** Verificação em duas etapas (usada no painel do admin). */
     mfa: {
       status(): Promise<{ verified: boolean; factorId: string | null }>

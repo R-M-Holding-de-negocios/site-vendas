@@ -5,7 +5,7 @@ import { Field } from '../ui/kit'
 
 export default function Login() {
   const [params] = useSearchParams()
-  const [mode, setMode] = useState<'in' | 'up' | 'reset'>(params.has('novo') ? 'up' : 'in')
+  const [mode, setMode] = useState<'in' | 'up' | 'reset' | 'new'>(params.has('nova-senha') ? 'new' : params.has('novo') ? 'up' : 'in')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [msg, setMsg] = useState('')
@@ -17,6 +17,11 @@ export default function Login() {
     setBusy(true)
     setMsg('')
     try {
+      if (mode === 'new') {
+        await db.auth.updatePassword(password)
+        nav('/painel')
+        return
+      }
       if (mode === 'reset') {
         await db.auth.resetPassword(email)
         setMsg('Enviamos um link para redefinir a senha no seu e-mail.')
@@ -37,7 +42,7 @@ export default function Login() {
     }
   }
 
-  const title = mode === 'up' ? 'Criar sua conta' : mode === 'reset' ? 'Recuperar senha' : 'Entrar'
+  const title = mode === 'up' ? 'Criar sua conta' : mode === 'reset' ? 'Recuperar senha' : mode === 'new' ? 'Nova senha' : 'Entrar'
   return (
     <main className="auth">
       <Link to="/" className="brand">
@@ -52,12 +57,14 @@ export default function Login() {
         </div>
       )}
       <form onSubmit={submit} className="card stack">
-        <Field label="E-mail">
-          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
-        </Field>
+        {mode !== 'new' && (
+          <Field label="E-mail">
+            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+          </Field>
+        )}
         {mode !== 'reset' && (
-          <Field label="Senha" hint={mode === 'up' ? 'Pelo menos 6 caracteres.' : undefined}>
-            <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === 'up' ? 'new-password' : 'current-password'} />
+          <Field label={mode === 'new' ? 'Nova senha' : 'Senha'} hint={mode === 'up' || mode === 'new' ? 'Pelo menos 6 caracteres.' : undefined}>
+            <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === 'up' || mode === 'new' ? 'new-password' : 'current-password'} />
           </Field>
         )}
         {msg && (
@@ -66,7 +73,7 @@ export default function Login() {
           </p>
         )}
         <button className="btn full" disabled={busy}>
-          {busy ? 'Aguarde…' : mode === 'up' ? 'Criar conta' : mode === 'reset' ? 'Enviar link' : 'Entrar'}
+          {busy ? 'Aguarde…' : mode === 'up' ? 'Criar conta' : mode === 'reset' ? 'Enviar link' : mode === 'new' ? 'Salvar nova senha' : 'Entrar'}
         </button>
       </form>
       <div className="row between">

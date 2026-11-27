@@ -83,6 +83,30 @@ export function sessionId() {
   }
 }
 
+// Rascunho do checkout (carrinho abandonado) desta visita, por loja.
+const draftKey = (storeId: string) => `vt_checkout_${storeId}`
+export function checkoutDraftId(storeId: string): string | null {
+  try {
+    return sessionStorage.getItem(draftKey(storeId))
+  } catch {
+    return null
+  }
+}
+export function rememberCheckoutDraft(storeId: string, id: string) {
+  try {
+    sessionStorage.setItem(draftKey(storeId), id)
+  } catch {
+    /* sem sessionStorage */
+  }
+}
+export function forgetCheckoutDraft(storeId: string) {
+  try {
+    sessionStorage.removeItem(draftKey(storeId))
+  } catch {
+    /* sem sessionStorage */
+  }
+}
+
 /** De onde o visitante veio, guardado no primeiro acesso da sessão. */
 export function trafficSource(): TrafficSource {
   try {

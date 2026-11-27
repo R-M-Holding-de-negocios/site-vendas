@@ -164,6 +164,9 @@ export function demoDb(): Db {
       async resetPassword() {
         throw new Error('No modo demonstração não há envio de e-mail.')
       },
+      async updatePassword() {
+        throw new Error('No modo demonstração a senha não pode ser trocada.')
+      },
       mfa: {
         status: async () => ({ verified: true, factorId: null }),
         enroll: async () => ({ factorId: 'demo', qr: '', secret: '' }),

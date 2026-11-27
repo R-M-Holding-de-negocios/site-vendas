@@ -1,6 +1,6 @@
 import { lazy, useEffect, useMemo, useState } from 'react'
 import { Link, Route, Routes, useLocation, useParams, useSearchParams } from 'react-router-dom'
-import { db, storeBySlug, track } from '../lib/api'
+import { db, rememberCheckoutDraft, storeBySlug, track } from '../lib/api'
 import { decodeCart, useCart } from '../lib/cart'
 import { can, DEFAULT_PLANS } from '../lib/plans'
 import type { Theme } from '../lib/types'
@@ -89,6 +89,8 @@ function Loaded({ data }: { data: StoreData }) {
       if (lines.length) {
         ctx.cart.replace(lines)
         ctx.setCartOpen(true)
+        const rc = params.get('rc')
+        if (rc && /^[0-9a-f-]{36}$/i.test(rc)) rememberCheckoutDraft(data.store.id, rc)
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

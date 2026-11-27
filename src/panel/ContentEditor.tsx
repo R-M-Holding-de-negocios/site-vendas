@@ -60,7 +60,11 @@ export default function ContentEditor() {
     db.list('products', { eq: { store_id: store.id } }).then(setProducts)
     if (fresh)
       setC({ store_id: store.id, kind: id === 'novo-post' ? 'post' : 'page', slug: '', title: '', body: '', cover_url: '', product_ids: [], show_in_menu: id === 'nova-pagina', position: 0, status: 'published', publish_at: new Date().toISOString(), seo: { title: '', description: '' } })
-    else db.get('contents', id).then((x) => (x ? setC(x) : setErr('Conteúdo não encontrado.')))
+    else
+      db.get('contents', id).then(
+        (x) => (x ? setC(x) : setErr('Conteúdo não encontrado.')),
+        () => setErr('Conteúdo não encontrado.'),
+      )
   }, [id, fresh, store.id])
 
   if (err && !c) return <ErrorBox message={err} />

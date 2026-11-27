@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { db, sessionId, track, trafficSource } from '../lib/api'
+import { checkoutDraftId, db, forgetCheckoutDraft, rememberCheckoutDraft, sessionId, track, trafficSource } from '../lib/api'
 import { openState } from '../lib/hours'
 import { startMercadoPagoCheckout } from '../lib/mercadopago'
 import { can } from '../lib/plans'
@@ -43,7 +43,8 @@ export default function Checkout() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [cepBusy, setCepBusy] = useState(false)
-  const checkoutId = useRef<string | null>(null)
+  // Mesmo rascunho durante a visita: sair e voltar ao checkout não cria outro carrinho abandonado.
+  const checkoutId = useRef<string | null>(checkoutDraftId(store.id))
   const open = openState(store.settings.hours)
   const blocked = !open.open && (store.settings.hours.paused || store.settings.hours.outside === 'block')
 
@@ -78,7 +79,10 @@ export default function Checkout() {
         items: q.items.map((i) => ({ product_id: i.product_id, variant_id: i.variant_id, qty: i.qty, name: i.name, unit_price_cents: i.unit_price_cents })),
         total_cents: q.total_cents,
       })
-        .then((r) => (checkoutId.current = r.id))
+        .then((r) => {
+          checkoutId.current = r.id
+          rememberCheckoutDraft(store.id, r.id)
+        })
         .catch(() => undefined)
     }, 1200)
     return () => clearTimeout(t)
@@ -138,12 +142,20 @@ export default function Checkout() {
       })
       track(store.id, 'order_placed', { data: { value_cents: r.total_cents } })
       cart.clear()
+      forgetCheckoutDraft(store.id)
+      const orderPath = path(`/pedido/${r.id}?t=${r.token}&novo=1`)
       if (pay === 'mercadopago') {
-        const url = await startMercadoPagoCheckout(r.id, r.token, store.slug)
-        if (/^https?:/.test(url)) return void (location.href = url)
-        return nav(url.replace(`/${store.slug}`, path('')))
+        // O pedido já existe: se abrir o Mercado Pago falhar, o cliente vai para a página do
+        // pedido, que tem o botão "Pagar com Mercado Pago" para tentar de novo.
+        try {
+          const url = await startMercadoPagoCheckout(r.id, r.token, store.slug)
+          if (/^https?:/.test(url)) return void (location.href = url)
+          return nav(url.replace(`/${store.slug}`, path('')))
+        } catch {
+          return nav(orderPath)
+        }
       }
-      nav(path(`/pedido/${r.id}?t=${r.token}&novo=1`))
+      nav(orderPath)
     } catch (err) {
       setError((err as Error).message)
       setBusy(false)
