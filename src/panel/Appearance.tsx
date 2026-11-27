@@ -465,7 +465,7 @@ export default function Appearance() {
                       const t = p.apply(theme)
                       return (
                         <button key={p.id} className={`swatch ${theme.preset === p.id ? 'on' : ''}`} onClick={() => confirm(`Aplicar o tema ${p.name}? Cores, fontes e formato mudam; produtos, textos e seções continuam.`) && update(t)}>
-                          <span className="dots">{[t.colors.primary, t.colors.background, t.colors.accent, t.colors.text].map((c) => <span key={c} style={{ background: c }} />)}</span>
+                          <span className="dots">{[t.colors.primary, t.colors.background, t.colors.accent, t.colors.text].map((c, i) => <span key={i} style={{ background: c }} />)}</span>
                           <b>{p.name}</b>
                           <span className="hint">{p.for}</span>
                         </button>

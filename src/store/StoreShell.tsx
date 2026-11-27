@@ -649,6 +649,16 @@ export function StoreShell({ children, overBanner, cartOpen, setCartOpen }: { ch
   const [menu, setMenu] = useState(false)
   const [search, setSearch] = useState(false)
   useEffect(() => loadFont(theme.font), [theme.font])
+  // Ícone da aba: logo da loja; volta ao ícone da plataforma ao sair da loja.
+  useEffect(() => {
+    const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]')
+    if (!link || !store.logo_url) return
+    const original = link.href
+    link.href = store.logo_url
+    return () => {
+      link.href = original
+    }
+  }, [store.logo_url])
   const open = openState(store.settings.hours)
   const loc = useLocation()
   const ownWhatsApp = /\/(p|checkout|pedido)(\/|$)/.test(loc.pathname)
