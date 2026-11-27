@@ -104,6 +104,32 @@ describe('webhook do Mercado Pago', () => {
     expect(calls).toHaveLength(0)
   })
 
+  it('pagamento que o Mercado Pago não conhece responde 200 (não é reenviado)', async () => {
+    const db = new FakeDb()
+    const { fetch } = fakeFetch({})
+    expect(await handleWebhook(makeDeps(db, fetch), notification('999'))).toEqual({ status: 200, outcome: 'payment_not_found' })
+    expect(db.updates).toBe(0)
+  })
+
+  it('erro do Mercado Pago que não é 404 continua sendo erro (para ele reenviar)', async () => {
+    const db = new FakeDb()
+    const { fetch } = fakeFetch({ 'GET /v1/payments/998': () => new Response('{}', { status: 503 }) })
+    await expect(handleWebhook(makeDeps(db, fetch), notification('998'))).rejects.toThrow('503')
+  })
+
+  it('pagamento aprovado depois do cancelamento automático fica registrado no pedido', async () => {
+    const db = new FakeDb()
+    db.orders = [order({ status: 'cancelled' })]
+    const { fetch } = mp({ id: 563, status: 'approved', transaction_amount: 132.9 })
+    expect((await handleWebhook(makeDeps(db, fetch), notification('563'))).outcome).toBe('paid_after_cancel')
+    const o = db.orders[0]
+    expect(o.status).toBe('cancelled')
+    expect(o.payment).toMatchObject({ status: 'paid', provider_ref: '563' })
+    expect(o.history.at(-1)?.note).toMatch(/depois do cancelamento automático/)
+    expect((await handleWebhook(makeDeps(db, fetch), notification('563'))).outcome).toBe('already_paid')
+    expect(db.updates).toBe(1)
+  })
+
   it('responde 200 e ignora outros tipos de notificação', async () => {
     const db = new FakeDb()
     const { fetch, calls } = mp({ id: 562, status: 'approved' })

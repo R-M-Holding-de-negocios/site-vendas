@@ -3,7 +3,7 @@
 // A notificação só diz "o pagamento X mudou". O estado real é sempre consultado na API
 // do Mercado Pago com o token do lojista, então uma notificação falsa não consegue
 // marcar pedido como pago; a assinatura serve para descartar lixo cedo.
-import { getPayment, sellerToken } from './mp.ts'
+import { getPayment, MpError, sellerToken } from './mp.ts'
 import { verifySignature } from './signature.ts'
 import type { Deps, OrderStatus } from './types.ts'
 
@@ -17,6 +17,8 @@ export interface WebhookResult {
     | 'order_not_found'
     | 'amount_mismatch'
     | 'paid'
+    | 'paid_after_cancel'
+    | 'payment_not_found'
     | 'already_paid'
     | 'refunded'
     | 'already_refunded'
@@ -51,7 +53,15 @@ export async function handleWebhook(deps: Deps, req: { url: string; headers: Hea
 
   const token = await sellerToken(deps, storeId)
   if (!token) return { status: 200, outcome: 'no_token' }
-  const payment = await getPayment(deps.fetch, token, dataId)
+  let payment: Awaited<ReturnType<typeof getPayment>>
+  try {
+    payment = await getPayment(deps.fetch, token, dataId)
+  } catch (e) {
+    // Pagamento que o Mercado Pago não conhece (ex.: aviso simulado no painel): responde 200
+    // para ele não reenviar. Outros erros (fora do ar, token) seguem como 500 e são reenviados.
+    if (e instanceof MpError && e.status === 404) return { status: 200, outcome: 'payment_not_found' }
+    throw e
+  }
   const orderId = String(payment.external_reference ?? '')
   const order = /^[0-9a-f-]{36}$/i.test(orderId) ? await deps.db.order(orderId) : null
   if (!order || order.store_id !== storeId) return { status: 200, outcome: 'order_not_found' }
@@ -60,6 +70,15 @@ export async function handleWebhook(deps: Deps, req: { url: string; headers: Hea
   const ref = String(payment.id)
 
   if (payment.status === 'approved') {
+    if (order.status === 'cancelled' && order.payment.status !== 'paid') {
+      // Pagou depois do cancelamento automático (24h): o estoque já voltou e o pedido não reabre
+      // sozinho. Fica registrado no pedido para o lojista decidir (enviar ou devolver o valor).
+      const changed = await deps.db.updateOrderIf(order.id, ['cancelled'], {
+        payment: { ...order.payment, status: 'paid', provider_ref: ref },
+        history: [...(order.history ?? []), { status: 'cancelled', at, note: 'Pagamento aprovado no Mercado Pago depois do cancelamento automático. Combine com o cliente: enviar o pedido ou devolver o valor.' }],
+      })
+      return { status: 200, outcome: changed ? 'paid_after_cancel' : 'already_paid' }
+    }
     if (order.status !== 'pending') return { status: 200, outcome: order.payment.provider_ref === ref || order.status === 'paid' ? 'already_paid' : 'ignored' }
     const amountCents = Math.round(Number(payment.transaction_amount) * 100)
     if (amountCents !== order.total_cents || (payment.currency_id && payment.currency_id !== 'BRL')) {
