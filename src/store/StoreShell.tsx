@@ -10,6 +10,7 @@ import { brl, waLink } from '../lib/util'
 import { Icon } from '../ui/icons'
 import { useStore, visibleProducts } from './context'
 import { QtyStepper } from './parts'
+import { ScrollProgress, useFxInteractions } from './fx'
 
 /** Cor do texto que fica legível sobre a cor principal. */
 function onColor(hex: string) {
@@ -50,6 +51,7 @@ export function themeClasses(t: Theme) {
     `h-${a.product_hover}`,
     `buy-${a.buy_button}`,
     a.page === 'fade' ? 'page-fade' : '',
+    a.stagger ? 'stagger' : '',
   ].join(' ')
 }
 
@@ -659,6 +661,7 @@ export function StoreShell({ children, overBanner, cartOpen, setCartOpen }: { ch
       link.href = original
     }
   }, [store.logo_url])
+  const fxHandlers = useFxInteractions(theme)
   const open = openState(store.settings.hours)
   const loc = useLocation()
   const ownWhatsApp = /\/(p|checkout|pedido)(\/|$)/.test(loc.pathname)
@@ -666,11 +669,13 @@ export function StoreShell({ children, overBanner, cartOpen, setCartOpen }: { ch
     <div
       className={themeClasses(theme)}
       style={themeStyle(theme)}
+      {...fxHandlers}
       onClickCapture={(e) => {
         // Na prévia do editor, os links não saem da página.
         if (preview && (e.target as HTMLElement).closest('a')) e.preventDefault()
       }}
     >
+      {theme.animations.scroll_progress && theme.animations.intensity !== 'off' && <ScrollProgress />}
       <Announcement />
       {!open.open && <div className="closed-bar">{open.message}</div>}
       <Header onMenu={() => setMenu(true)} onSearch={() => setSearch((s) => !s)} overBanner={overBanner} />

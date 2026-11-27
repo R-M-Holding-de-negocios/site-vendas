@@ -68,11 +68,15 @@ export function seedDemo(s: DemoStore) {
   theme.radius = 'pill'
   theme.announcement = { enabled: true, messages: ['Frete grátis acima de R$ 150', '5% de desconto no Pix'], link: '' }
   theme.animations.announcement = 'rotate'
+  // Mostra alguns efeitos na loja de exemplo.
+  theme.animations.title = 'rotate'
+  theme.animations.product_hover = 'spotlight'
+  theme.animations.sections = 'slide-up'
   const banner = newSection('banner')
   banner.props = {
     ...banner.props,
     image: bannerImage('#f7c6d4', '#fbe3c0', '🧁🍰'),
-    title: 'Doces feitos à mão, todo dia',
+    title: 'Doces feitos à mão {todo dia|para festas|para presentear}',
     text: 'Encomende hoje e receba amanhã em Campinas',
     button: 'Ver os doces',
     align: 'left',
@@ -81,12 +85,27 @@ export function seedDemo(s: DemoStore) {
   const benefits = newSection('benefits')
   const testimonials = newSection('testimonials')
   const faq = newSection('faq')
+  const strip = newSection('marquee')
+  strip.props.items = [{ text: 'Feito à mão', image: '' }, { text: 'Entrega em Campinas', image: '' }, { text: '5% off no Pix', image: '' }, { text: 'Encomendas para festas', image: '' }]
+  strip.style = { ...strip.style, bg: '#fdeef2', pad: 's', width: 'full' }
+  const stats = newSection('stats')
+  stats.props = {
+    title: 'Feito com carinho desde 2018',
+    items: [
+      { value: 12000, prefix: '+', suffix: '', label: 'doces entregues' },
+      { value: 4.9, prefix: '', suffix: '', label: 'nota dos clientes' },
+      { value: 8, prefix: '', suffix: ' anos', label: 'adoçando Campinas' },
+    ],
+  }
+  stats.style = { ...stats.style, fx: 'aurora' }
   theme.sections = [
     banner,
+    strip,
     benefits,
     newSection('categories'),
     { ...newSection('products'), props: { title: 'Mais pedidos', source: 'best_sellers', category_id: '', ids: [], layout: 'carousel', limit: 8 } },
     { ...newSection('products'), props: { title: 'Todos os doces', source: 'all', category_id: '', ids: [], layout: 'grid', limit: 24 } },
+    stats,
     testimonials,
     faq,
   ]

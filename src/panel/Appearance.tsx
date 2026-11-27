@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { db, normalizeStore, storeUrl } from '../lib/api'
 import { can, planAtLeast, planName, type Feature } from '../lib/plans'
-import { FONT_PAIRS, loadFont, newSection, PRESETS, SECTION_INFO } from '../lib/theme'
-import type { Category, Content, MenuItem, Product, Section, SectionType, Theme } from '../lib/types'
+import { BG_FX, FONT_PAIRS, FX_COMBOS, loadFont, newSection, PRESETS, SECTION_INFO, TEXT_FX } from '../lib/theme'
+import type { BgFx, Category, Content, MenuItem, Product, Section, SectionType, TextFx, Theme } from '../lib/types'
 import { fmtDateTime } from '../lib/util'
 import { Ctx } from '../store/context'
 import { HomePage } from '../store/pages'
@@ -121,6 +121,16 @@ const SPECS: Record<SectionType, Spec[]> = {
     { key: 'title', label: 'Título', kind: 'text' },
     { key: 'text', label: 'Texto', kind: 'text' },
     { key: 'button', label: 'Texto do botão', kind: 'text' },
+  ],
+  marquee: [
+    { key: 'items', label: 'Itens', kind: 'list', item: [{ key: 'text', label: 'Frase', kind: 'text' }, { key: 'image', label: 'Logo ou imagem (opcional)', kind: 'image' }] },
+    { key: 'speed', label: 'Velocidade', kind: 'select', options: [['slow', 'Devagar'], ['normal', 'Normal'], ['fast', 'Rápida']] },
+    { key: 'direction', label: 'Direção', kind: 'select', options: [['left', 'Para a esquerda'], ['right', 'Para a direita']] },
+    { key: 'size', label: 'Tamanho', kind: 'select', options: [['s', 'Pequeno'], ['m', 'Médio'], ['l', 'Grande']] },
+  ],
+  stats: [
+    { key: 'title', label: 'Título (opcional)', kind: 'text' },
+    { key: 'items', label: 'Números', kind: 'list', item: [{ key: 'value', label: 'Número', kind: 'number' }, { key: 'prefix', label: 'Antes do número (ex.: +)', kind: 'text' }, { key: 'suffix', label: 'Depois do número (ex.: %, anos)', kind: 'text' }, { key: 'label', label: 'Legenda', kind: 'text' }] },
   ],
 }
 
@@ -446,6 +456,13 @@ export default function Appearance() {
                       <option value="l">Grande</option>
                     </select>
                   </Field>
+                  {can(store, 'animations') && (
+                    <Field label="Efeito de fundo" hint="Animado, nas cores da loja. Use em uma ou duas seções para não cansar.">
+                      <select value={editingSection.style.fx ?? 'none'} onChange={(e) => setSection(editingSection.id, { ...editingSection, style: { ...editingSection.style, fx: e.target.value as BgFx } })}>
+                        {BG_FX.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                      </select>
+                    </Field>
+                  )}
                   <Field label="Mostrar em">
                     <select value={editingSection.style.device} onChange={(e) => setSection(editingSection.id, { ...editingSection, style: { ...editingSection.style, device: e.target.value as 'all' } })}>
                       <option value="all">Celular e computador</option>
@@ -665,6 +682,21 @@ export default function Appearance() {
                   </Field>
                   {theme.animations.intensity !== 'off' && (
                     <>
+                      <div className="stack tight">
+                        <span className="field-label">Combinações prontas</span>
+                        <div className="chips">
+                          {FX_COMBOS.map((c) => (
+                            <button key={c.name} type="button" className="chip" title={c.help} onClick={() => patch('animations', { ...theme.animations, ...c.set })}>
+                              {c.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <Field label="Títulos" hint={TEXT_FX.find(([v]) => v === theme.animations.title)?.[2] || 'Efeito no título do banner e das seções'}>
+                        <select value={theme.animations.title} onChange={(e) => patch('animations', { ...theme.animations, title: e.target.value as TextFx })}>
+                          {TEXT_FX.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                        </select>
+                      </Field>
                       <Field label="Entrada das seções ao rolar">
                         <select value={theme.animations.sections} onChange={(e) => patch('animations', { ...theme.animations, sections: e.target.value as 'fade' })}>
                           <option value="none">Nenhuma</option>
@@ -672,14 +704,20 @@ export default function Appearance() {
                           <option value="slide-up">Deslizar de baixo</option>
                           <option value="slide-side">Deslizar do lado</option>
                           <option value="zoom">Ampliar</option>
+                          <option value="blur">Sair do desfoque</option>
+                          <option value="flip">Virar de leve</option>
                         </select>
                       </Field>
+                      <Toggle checked={theme.animations.stagger} onChange={(v) => patch('animations', { ...theme.animations, stagger: v })} label="Produtos aparecem um depois do outro" />
                       <Field label="Foto do produto ao passar o dedo ou o mouse">
                         <select value={theme.animations.product_hover} onChange={(e) => patch('animations', { ...theme.animations, product_hover: e.target.value as 'zoom' })}>
                           <option value="none">Nenhuma</option>
                           <option value="zoom">Ampliar</option>
                           <option value="swap">Trocar pela segunda foto</option>
                           <option value="shadow">Sombra</option>
+                          <option value="tilt">Cartão inclina seguindo o mouse</option>
+                          <option value="spotlight">Luz seguindo o mouse</option>
+                          <option value="glare">Reflexo passando na foto</option>
                         </select>
                       </Field>
                       <div className="grid2">
@@ -698,6 +736,9 @@ export default function Appearance() {
                           <option value="none">Nenhuma</option>
                           <option value="pulse">Pulsar de leve</option>
                           <option value="shine">Brilho ao passar</option>
+                          <option value="star">Borda com luz girando</option>
+                          <option value="glow">Brilho pulsando em volta</option>
+                          <option value="magnet">Ímã (segue o mouse de leve)</option>
                         </select>
                       </Field>
                       <Field label="Cabeçalho ao rolar">
@@ -720,6 +761,13 @@ export default function Appearance() {
                           <option value="fade">Esmaecer</option>
                         </select>
                       </Field>
+                      <Field label="Toque ou clique">
+                        <select value={theme.animations.click} onChange={(e) => patch('animations', { ...theme.animations, click: e.target.value as 'none' })}>
+                          <option value="none">Nenhum efeito</option>
+                          <option value="spark">Faíscas</option>
+                        </select>
+                      </Field>
+                      <Toggle checked={theme.animations.scroll_progress} onChange={(v) => patch('animations', { ...theme.animations, scroll_progress: v })} label="Barra no topo mostrando a rolagem da página" />
                       <Toggle checked={theme.animations.cart_bounce} onChange={(v) => patch('animations', { ...theme.animations, cart_bounce: v })} label="Número do carrinho salta ao adicionar" />
                     </>
                   )}

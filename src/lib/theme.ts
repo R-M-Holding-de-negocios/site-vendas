@@ -1,4 +1,4 @@
-import type { DayHours, MenuItem, Section, SectionType, StoreSettings, Theme } from './types'
+import type { BgFx, TextFx, DayHours, MenuItem, Section, SectionType, StoreSettings, Theme } from './types'
 import { uid } from './util'
 
 export const FONT_PAIRS: { id: string; name: string; head: string; body: string }[] = [
@@ -57,6 +57,8 @@ export const SECTION_INFO: Record<SectionType, { name: string; plan: 'vitrine' |
   countdown: { name: 'Contagem regressiva', plan: 'pro', help: 'Relógio até o fim de uma promoção' },
   posts: { name: 'Posts recentes', plan: 'pro', help: 'Os últimos posts da loja' },
   lead: { name: 'Captação de contatos', plan: 'pro', help: 'Campo para o visitante deixar o WhatsApp' },
+  marquee: { name: 'Faixa rolante', plan: 'loja', help: 'Frases ou logos passando sem parar' },
+  stats: { name: 'Números', plan: 'loja', help: 'Números que contam até o valor (ex.: +500 clientes)' },
 }
 
 export function newSection(type: SectionType): Section {
@@ -102,15 +104,54 @@ export function newSection(type: SectionType): Section {
     countdown: { title: 'A promoção termina em', ends_at: '', button: 'Aproveitar', link: '' },
     posts: { title: 'Do nosso blog', limit: 3 },
     lead: { title: 'Ganhe 10% na primeira compra', text: 'Deixe seu WhatsApp e receba o cupom.', button: 'Quero o cupom' },
+    marquee: {
+      items: [{ text: 'Feito à mão', image: '' }, { text: 'Entrega no mesmo dia', image: '' }, { text: 'Pix com desconto', image: '' }],
+      speed: 'normal',
+      direction: 'left',
+      size: 'm',
+    },
+    stats: {
+      title: '',
+      items: [
+        { value: 500, prefix: '+', suffix: '', label: 'clientes felizes' },
+        { value: 4.9, prefix: '', suffix: '', label: 'nota média' },
+        { value: 8, prefix: '', suffix: ' anos', label: 'de experiência' },
+      ],
+    },
   }
   return {
     id: uid(),
     type,
     enabled: true,
     props: structuredClone(props[type]),
-    style: { bg: '', width: 'contained', pad: 'm', device: 'all' },
+    style: { bg: '', width: 'contained', pad: 'm', device: 'all', fx: 'none' },
   }
 }
+
+// ---------- Efeitos (implementação própria em store/fx.tsx, inspirada em efeitos comuns da web) ----------
+
+export const TEXT_FX: [TextFx, string, string][] = [
+  ['none', 'Sem efeito', ''],
+  ['split', 'Letras subindo', 'As letras aparecem uma a uma, de baixo para cima'],
+  ['blur', 'Desfoque', 'As palavras surgem saindo do desfoque'],
+  ['shiny', 'Brilho', 'Um reflexo passa pelo texto de tempos em tempos'],
+  ['gradient', 'Degradê animado', 'As cores da loja correm pelo texto'],
+  ['typewriter', 'Máquina de escrever', 'O texto é digitado com um cursor piscando'],
+  ['decrypt', 'Embaralhado', 'Letras sorteadas que se ajeitam no texto certo'],
+  ['rotate', 'Palavras que trocam', 'Escreva {opção 1|opção 2|opção 3} no título e elas se alternam'],
+]
+
+export const BG_FX: [BgFx, string][] = [
+  ['none', 'Nenhum'],
+  ['aurora', 'Aurora (manchas de cor em movimento)'],
+  ['gradient', 'Degradê que se move'],
+  ['dots', 'Pontinhos'],
+  ['grid', 'Quadriculado'],
+  ['waves', 'Ondas'],
+  ['particles', 'Partículas flutuando'],
+  ['rays', 'Raios de luz'],
+  ['grain', 'Textura granulada'],
+]
 
 const homeMenu = (): MenuItem => ({ label: 'Início', type: 'home', target: '', children: [] })
 
@@ -158,6 +199,10 @@ export function defaultTheme(): Theme {
       cart_bounce: true,
       announcement: 'static',
       page: 'none',
+      title: 'none',
+      click: 'none',
+      stagger: true,
+      scroll_progress: false,
     },
     whatsapp_button: true,
     hide_branding: false,
@@ -285,3 +330,27 @@ export function withDefaults<T extends object>(value: Partial<T> | null | undefi
   }
   return out as T
 }
+
+/** Combinações de efeitos com um clique no editor de aparência. */
+export const FX_COMBOS: { name: string; help: string; set: Partial<Theme['animations']> }[] = [
+  {
+    name: 'Discreto',
+    help: 'Pouco movimento, bom para qualquer loja',
+    set: { intensity: 'soft', title: 'none', sections: 'fade', product_hover: 'zoom', buy_button: 'none', click: 'none', stagger: true, scroll_progress: false },
+  },
+  {
+    name: 'Moderno',
+    help: 'Títulos saindo do desfoque, luz nos cartões e borda animada no botão',
+    set: { intensity: 'normal', title: 'blur', sections: 'slide-up', product_hover: 'spotlight', buy_button: 'star', click: 'none', stagger: true, scroll_progress: true },
+  },
+  {
+    name: 'Divertido',
+    help: 'Letras pulando, cartões que inclinam e faíscas no toque',
+    set: { intensity: 'normal', title: 'split', sections: 'zoom', product_hover: 'tilt', buy_button: 'pulse', click: 'spark', stagger: true, scroll_progress: false },
+  },
+  {
+    name: 'Elegante',
+    help: 'Brilho suave nos títulos e reflexo nas fotos',
+    set: { intensity: 'soft', title: 'shiny', sections: 'blur', product_hover: 'glare', buy_button: 'shine', click: 'none', stagger: true, scroll_progress: false },
+  },
+]

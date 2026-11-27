@@ -373,6 +373,13 @@ export type SectionType =
   | 'countdown'
   | 'posts'
   | 'lead'
+  | 'marquee'
+  | 'stats'
+
+/** Efeitos de texto dos títulos (lib/theme.ts TEXT_FX; store/fx.tsx). */
+export type TextFx = 'none' | 'split' | 'blur' | 'shiny' | 'gradient' | 'typewriter' | 'decrypt' | 'rotate'
+/** Fundos animados das seções (lib/theme.ts BG_FX; store/fx.tsx). */
+export type BgFx = 'none' | 'aurora' | 'gradient' | 'dots' | 'grid' | 'waves' | 'particles' | 'rays' | 'grain'
 
 export interface Section {
   id: string
@@ -381,7 +388,7 @@ export interface Section {
   // Cada tipo de seção define suas próprias opções (ver store/sections.tsx).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   props: Record<string, any>
-  style: { bg: string; width: 'full' | 'contained'; pad: 's' | 'm' | 'l'; device: 'all' | 'mobile' | 'desktop' }
+  style: { bg: string; width: 'full' | 'contained'; pad: 's' | 'm' | 'l'; device: 'all' | 'mobile' | 'desktop'; fx?: BgFx }
 }
 
 export interface MenuItem {
@@ -414,15 +421,23 @@ export interface Theme {
   footer: { text: string; show_payments: boolean; columns: { title: string; links: MenuItem[] }[] }
   animations: {
     intensity: 'off' | 'soft' | 'normal'
-    sections: 'none' | 'fade' | 'slide-up' | 'slide-side' | 'zoom'
-    product_hover: 'none' | 'zoom' | 'swap' | 'shadow'
+    sections: 'none' | 'fade' | 'slide-up' | 'slide-side' | 'zoom' | 'blur' | 'flip'
+    product_hover: 'none' | 'zoom' | 'swap' | 'shadow' | 'tilt' | 'spotlight' | 'glare'
     carousel: 'slide' | 'fade'
     carousel_seconds: number
-    buy_button: 'none' | 'pulse' | 'shine'
+    buy_button: 'none' | 'pulse' | 'shine' | 'star' | 'glow' | 'magnet'
     header: 'none' | 'shrink' | 'hide'
     cart_bounce: boolean
     announcement: 'static' | 'marquee' | 'rotate'
     page: 'none' | 'fade'
+    /** Efeito dos títulos do banner e das seções. */
+    title: TextFx
+    /** Faíscas no toque/clique. */
+    click: 'none' | 'spark'
+    /** Cartões de produto entram um depois do outro. */
+    stagger: boolean
+    /** Barra fina no topo mostrando o quanto a página já rolou. */
+    scroll_progress: boolean
   }
   whatsapp_button: boolean
   hide_branding: boolean

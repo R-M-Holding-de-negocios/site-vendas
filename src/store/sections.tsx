@@ -8,6 +8,7 @@ import { SECTION_INFO } from '../lib/theme'
 import type { Product, Section } from '../lib/types'
 import { Icon } from '../ui/icons'
 import { useStore, visibleProducts, youtubeId } from './context'
+import { CountUp, FxBackground, FxText, Marquee } from './fx'
 import { Price, ProductGrid, Reveal, Stars } from './parts'
 
 export function pickProducts(products: Product[], props: Section['props']): Product[] {
@@ -32,7 +33,7 @@ export function pickProducts(products: Product[], props: Section['props']): Prod
 }
 
 function Title({ text, center }: { text?: string; center?: boolean }) {
-  return text ? <h2 className={`sec-title ${center ? 'center' : ''}`}>{text}</h2> : null
+  return text ? <FxText text={text} className={`sec-title ${center ? 'center' : ''}`} /> : null
 }
 
 function SectionLink({ link, label, className = 'sbtn' }: { link: string; label: string; className?: string }) {
@@ -71,7 +72,7 @@ function Banner({ s, heading }: { s: Section; heading: boolean }) {
       {p.image && p.overlay > 0 && <div className="shade" style={{ opacity: p.overlay / 100 }} />}
       <div className="wrap" style={{ position: 'relative' }}>
         <div className="btxt">
-          {p.title && <H>{p.title}</H>}
+          {p.title && <FxText as={H} text={p.title} />}
           {p.text && <p>{p.text}</p>}
           <SectionLink link={p.link} label={p.button} />
         </div>
@@ -404,6 +405,39 @@ function SectionBody({ s, first }: { s: Section; first: boolean }) {
     }
     case 'lead':
       return <LeadForm s={s} />
+    case 'marquee': {
+      const items = (p.items ?? []) as { text: string; image: string }[]
+      return (
+        <div className={`mq-${p.size ?? 'm'}`}>
+          <Marquee speed={p.speed ?? 'normal'} reverse={p.direction === 'right'}>
+            {items.map((it, i) => (
+              <span key={i} className="mq-item">
+                {it.image ? <img src={it.image} alt={it.text || ''} loading="lazy" /> : <span className="mq-dot" />}
+                {it.text && <span>{it.text}</span>}
+              </span>
+            ))}
+          </Marquee>
+        </div>
+      )
+    }
+    case 'stats': {
+      const items = (p.items ?? []) as { value: number; prefix: string; suffix: string; label: string }[]
+      return (
+        <>
+          <Title text={p.title} center />
+          <div className="stats">
+            {items.map((it, i) => (
+              <div key={i}>
+                <span className="stat-n">
+                  <CountUp value={Number(it.value) || 0} prefix={it.prefix} suffix={it.suffix} />
+                </span>
+                <span className="stat-l">{it.label}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )
+    }
   }
 }
 
@@ -432,9 +466,11 @@ export function Sections({ sections }: { sections: Section[] }) {
           `pad-${s.style.pad}`,
           edge || s.style.width === 'full' ? 'full' : '',
           s.style.device === 'mobile' ? 'only-mobile' : s.style.device === 'desktop' ? 'only-desktop' : '',
+          s.style.fx && s.style.fx !== 'none' ? 'has-fx' : '',
         ].join(' ')
         return (
           <section key={s.id} className={cls} style={{ background: s.style.bg || undefined, paddingTop: edge && i === 0 ? 0 : undefined, paddingBottom: edge && s.style.pad === 'm' ? 0 : undefined }} data-section={s.id}>
+            <FxBackground kind={s.style.fx} />
             <Reveal className="wrap">
               <SectionBody s={s} first={i === 0} />
             </Reveal>
