@@ -24,6 +24,8 @@ export interface Store {
   status: StoreStatus
   trial_ends_at: string | null
   paid_until: string | null
+  /** Plano que volta quando o pagamento for registrado; preenchido quando a loja passou da tolerância (ver lib/billing.ts). */
+  plan_before_downgrade?: PlanId | null
   settings: StoreSettings
   theme: Theme
   theme_draft: Theme | null

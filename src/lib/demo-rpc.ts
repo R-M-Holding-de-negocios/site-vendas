@@ -1,3 +1,4 @@
+import { GRACE_DAYS } from './billing'
 // Funções do servidor no modo demonstração. Fazem o mesmo que as funções SQL
 // em supabase/migrations; os testes em tests/sql comparam os dois.
 import type { DemoStore } from './db-demo'
@@ -12,6 +13,16 @@ const RESERVED = ['entrar', 'painel', 'admin', 'api', 'loja', 'lojas', 'planos',
 
 export function validSlug(slug: string) {
   return /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/.test(slug) && !RESERVED.includes(slug)
+}
+
+/** Mesma regra de downgrade_lapsed_stores (migração 0005): passou da tolerância, vira plano Vitrine. */
+export function applyLapses(s: DemoStore, now = new Date()) {
+  for (const st of s.rows('stores')) {
+    if (st.plan === 'vitrine' || st.plan_before_downgrade || st.status === 'suspended' || st.status === 'closed') continue
+    const due = st.status === 'trial' ? st.trial_ends_at : st.paid_until
+    if (!due || new Date(due).getTime() + GRACE_DAYS * 86400000 > now.getTime()) continue
+    s.update('stores', st.id, { plan: 'vitrine', plan_before_downgrade: st.plan, status: 'overdue' })
+  }
 }
 
 export function demoRpc(s: DemoStore): Rpc {
@@ -280,11 +291,13 @@ export function demoRpc(s: DemoStore): Rpc {
       const base = st.paid_until && new Date(st.paid_until) > new Date() ? new Date(st.paid_until) : new Date()
       const until = new Date(base)
       until.setMonth(until.getMonth() + a.months)
-      s.update('stores', st.id, { paid_until: until.toISOString(), status: 'active' })
+      // Pagamento devolve o plano que a loja tinha antes de passar da tolerância.
+      const plan = st.plan_before_downgrade ?? st.plan
+      s.update('stores', st.id, { paid_until: until.toISOString(), status: 'active', plan, plan_before_downgrade: null })
       log(st.id, `Pagamento registrado: ${a.months} mês(es)`)
       return s.insert('invoices', {
         store_id: st.id,
-        plan: st.plan,
+        plan,
         amount_cents: a.amount_cents,
         months: a.months,
         method: a.method,

@@ -87,7 +87,7 @@ export const PAY_LABEL: Record<PayMethod, string> = {
   pix: 'Pix',
   cash: 'Dinheiro na entrega ou retirada',
   card_on_delivery: 'Cartão na entrega ou retirada',
-  mercadopago: 'Cartão, Pix ou boleto pelo Mercado Pago',
+  mercadopago: 'Cartão ou Pix pelo Mercado Pago',
 }
 
 export function paymentOptions(store: Pick<Store, 'plan' | 'settings'>): PayMethod[] {

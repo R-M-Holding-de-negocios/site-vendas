@@ -8,7 +8,7 @@ basta seguir os passos na ordem.
 - Cada lojista conecta **a própria conta do Mercado Pago** no painel (Painel → Integrações →
   "Conectar Mercado Pago"). Ele entra na conta dele e autoriza a Vitrine.
 - Na loja, o cliente escolhe "Mercado Pago" e é levado para a página de pagamento do
-  Mercado Pago (Checkout Pro), onde paga com **Pix, cartão parcelado ou boleto**.
+  Mercado Pago (Checkout Pro), onde paga com **Pix ou cartão parcelado** (boleto fica de fora: compensa em até 3 dias úteis e o pedido é cancelado em 24 horas).
 - O dinheiro cai **direto na conta do lojista**. A taxa da plataforma (a porcentagem do plano,
   ex.: 2% no plano Loja) é separada automaticamente pelo Mercado Pago e cai na conta da
   Vitrine. O dinheiro nunca passa pela plataforma.
@@ -154,7 +154,7 @@ Lojas suspensas e produtos bloqueados não mostram prévia.
 
 Pedidos com Mercado Pago que ficam 24 horas sem pagamento são cancelados e o estoque volta
 (`supabase/cron.sql`). Se o Mercado Pago aprovar o pagamento depois disso (por exemplo, um
-boleto pago no último dia), o pedido **continua cancelado**, mas o pagamento fica registrado
+cartão aprovado depois de análise), o pedido **continua cancelado**, mas o pagamento fica registrado
 nele com a nota "Pagamento aprovado no Mercado Pago depois do cancelamento automático". O
 lojista vê isso no pedido e decide: enviar mesmo assim ou devolver o valor pelo Mercado Pago.
 

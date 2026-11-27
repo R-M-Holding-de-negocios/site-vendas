@@ -32,7 +32,7 @@ export async function connectMercadoPago(): Promise<string> {
 }
 
 /**
- * Link para onde mandar o cliente pagar o pedido (Checkout Pro: Pix, cartão, boleto).
+ * Link para onde mandar o cliente pagar o pedido (Checkout Pro: Pix e cartão).
  * No modo demonstração devolve a própria página do pedido, marcada como simulada.
  */
 export async function startMercadoPagoCheckout(orderId: string, token: string, slug: string): Promise<string> {

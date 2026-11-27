@@ -21,6 +21,8 @@ export default function Billing() {
   )
   const plans = data.data?.[1] ?? DEFAULT_PLANS
   const current = plans.find((p) => p.id === store.plan)!
+  // Rebaixada por falta de pagamento: o valor a pagar é o do plano que volta.
+  const toPay = (store.plan_before_downgrade && plans.find((p) => p.id === store.plan_before_downgrade)) || current
   const [label, tone] = STATUS[store.status]
   const ask = (text: string) => (SUPPORT_WHATSAPP ? waLink(SUPPORT_WHATSAPP, text) : '')
 
@@ -41,6 +43,12 @@ export default function Billing() {
               <dd>{fmtDate(store.trial_ends_at)}</dd>
             </>
           )}
+          {store.plan_before_downgrade && (
+            <>
+              <dt>Plano anterior</dt>
+              <dd>{planName(store.plan_before_downgrade)}: volta assim que o pagamento for registrado</dd>
+            </>
+          )}
           <dt>Pago até</dt>
           <dd>{fmtDate(store.paid_until)}</dd>
           <dt>Taxa por venda online</dt>
@@ -48,7 +56,7 @@ export default function Billing() {
         </dl>
         <div className="alert">
           <span>
-            Para pagar a mensalidade, faça um Pix de <b>{brl(current.price_cents)}</b>
+            Para pagar a mensalidade, faça um Pix de <b>{brl(toPay.price_cents)}</b>{toPay !== current && <> (plano {toPay.name})</>}
             {PLATFORM_PIX ? <> para a chave <b>{PLATFORM_PIX}</b></> : ' para a chave informada pelo suporte'} e envie o comprovante.
           </span>
           {PLATFORM_PIX && <CopyButton text={PLATFORM_PIX} label="Copiar chave" />}

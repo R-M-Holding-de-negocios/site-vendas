@@ -21,7 +21,7 @@ describe('preferência do Checkout Pro', () => {
     expect(p.notification_url).toBe(`https://proj.supabase.co/functions/v1/mp-webhook?store_id=${STORE_ID}&source_news=webhooks`)
     expect(p.statement_descriptor).toBe('DOCES DA ANA CIA')
     expect(p.payer).toEqual({ name: 'Maria', surname: 'da Silva Souza', email: 'maria@example.com', phone: { area_code: '11', number: '987654321' } })
-    expect(p.payment_methods).toEqual({ installments: 6 })
+    expect(p.payment_methods).toEqual({ installments: 6, excluded_payment_types: [{ id: 'ticket' }] })
   })
 
   it('distribui o desconto do cupom e a soma bate com o total', () => {

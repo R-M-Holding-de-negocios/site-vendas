@@ -256,3 +256,73 @@ describe('pedidos seguidos do mesmo produto', () => {
     expect(stock).toBe(0)
   })
 })
+
+describe('tolerância de 7 dias (migração 0005)', () => {
+  const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString()
+  const storeRow = (id: string) => db.rows<Store>(superuser, `select * from stores where id = $1`, [id]).then((r) => r[0])
+
+  it('rebaixa para Vitrine só quem passou de 7 dias, guarda o plano e registra; pagamento devolve o plano', async () => {
+    const lapsed = await db.merchant('venceu-10', 'loja')
+    const inGrace = await db.merchant('venceu-3', 'pro')
+    const trialOld = await db.merchant('teste-velho', 'pro')
+    const suspended = await db.merchant('suspensa-velha', 'pro')
+    await db.q(superuser, `update stores set paid_until = $1 where id = $2`, [daysAgo(10), lapsed.storeId])
+    await db.q(superuser, `update stores set paid_until = $1 where id = $2`, [daysAgo(3), inGrace.storeId])
+    await db.q(superuser, `update stores set status = 'trial', trial_ends_at = $1 where id = $2`, [daysAgo(8), trialOld.storeId])
+    await db.q(superuser, `update stores set status = 'suspended', paid_until = $1 where id = $2`, [daysAgo(30), suspended.storeId])
+
+    const [{ n }] = await db.q<{ n: number }>(superuser, `select public.downgrade_lapsed_stores() n`)
+    expect(n).toBeGreaterThanOrEqual(2)
+    expect(await storeRow(lapsed.storeId)).toMatchObject({ plan: 'vitrine', plan_before_downgrade: 'loja', status: 'overdue' })
+    expect(await storeRow(trialOld.storeId)).toMatchObject({ plan: 'vitrine', plan_before_downgrade: 'pro', status: 'overdue' })
+    expect(await storeRow(inGrace.storeId)).toMatchObject({ plan: 'pro', plan_before_downgrade: null })
+    expect(await storeRow(suspended.storeId)).toMatchObject({ plan: 'pro', status: 'suspended' })
+    const log = await db.q<{ action: string }>(superuser, `select action from audit_log where store_id = $1`, [lapsed.storeId])
+    expect(log.map((l) => l.action)).toEqual(['Plano loja mudou para Vitrine: pagamento não confirmado em 7 dias após o vencimento'])
+    // rodar de novo não muda nada
+    await db.q(superuser, `select public.downgrade_lapsed_stores()`)
+    expect(await storeRow(lapsed.storeId)).toMatchObject({ plan: 'vitrine', plan_before_downgrade: 'loja' })
+
+    // rebaixada não recebe pedido com Pix/checkout
+    const p = await db.insert<Product>('products', { store_id: lapsed.storeId, name: 'X', price_cents: 1000 })
+    expect(
+      await errorOf(db.rpc(anon, 'place_order', {
+        store_id: lapsed.storeId, lines: [{ product_id: p.id, variant_id: null, qty: 1 }],
+        customer: { name: 'Ana', phone: '19988887777', email: '' }, shipping: { method: 'pickup', address: null },
+        payment: { method: 'pix' }, coupon: '', notes: '', source: null, checkout_id: null,
+      })),
+    ).not.toBe('(não falhou)')
+
+    // pagamento devolve o plano anterior
+    const adminId = await db.createUser('cobranca-admin@x.com')
+    await db.makeAdmin(adminId)
+    const inv = await db.rpc<{ plan: string }>(user(adminId, 'aal2'), 'admin_register_payment', { store_id: lapsed.storeId, months: 1, amount_cents: 4900, method: 'pix', note: '' })
+    expect(inv.plan).toBe('loja')
+    expect(await storeRow(lapsed.storeId)).toMatchObject({ plan: 'loja', plan_before_downgrade: null, status: 'active' })
+  })
+
+  it('admin mudar o plano à mão desfaz o rebaixamento', async () => {
+    const m = await db.merchant('troca-manual', 'pro')
+    await db.q(superuser, `update stores set paid_until = $1 where id = $2`, [daysAgo(20), m.storeId])
+    await db.q(superuser, `select public.downgrade_lapsed_stores()`)
+    await db.q(superuser, `update stores set plan = 'loja' where id = $1`, [m.storeId])
+    expect(await storeRow(m.storeId)).toMatchObject({ plan: 'loja', plan_before_downgrade: null })
+  })
+
+  it('lojista não mexe no plano anterior nem chama a função', async () => {
+    const m = await db.merchant('sem-mexer', 'pro')
+    expect(await errorOf(db.q(m.who, `update stores set plan_before_downgrade = 'pro' where id = $1`, [m.storeId]))).toMatch(/permission denied/)
+    expect(await errorOf(db.q(m.who, `select public.downgrade_lapsed_stores()`))).toMatch(/permission denied/)
+  })
+
+  it('o modo demonstração segue a mesma regra', async () => {
+    const s = new DemoStore()
+    const { applyLapses } = await import('../../src/lib/demo-rpc')
+    const base = { settings: defaultSettings(), theme: defaultTheme(), theme_draft: null, theme_history: [], owner_id: 'u', whatsapp: '', description: '', logo_url: '', trial_ends_at: null }
+    const a = s.insert('stores', { ...base, slug: 'a', name: 'a', plan: 'loja', status: 'active', paid_until: daysAgo(10) } as Partial<Store>)
+    const b = s.insert('stores', { ...base, slug: 'b', name: 'b', plan: 'pro', status: 'active', paid_until: daysAgo(3) } as Partial<Store>)
+    applyLapses(s)
+    expect(s.rows('stores').find((x) => x.id === a.id)).toMatchObject({ plan: 'vitrine', plan_before_downgrade: 'loja', status: 'overdue' })
+    expect(s.rows('stores').find((x) => x.id === b.id)).toMatchObject({ plan: 'pro' })
+  })
+})

@@ -489,7 +489,7 @@ function Footer() {
             {theme.footer.show_payments && pays.length > 0 && (
               <div className="paychips" style={{ marginTop: 10 }} aria-label="Formas de pagamento">
                 {pays.map((p) => (
-                  <span key={p}>{p === 'mercadopago' ? 'Cartão e boleto' : p === 'whatsapp' ? 'Combinar' : PAY_LABEL[p].split(' ')[0]}</span>
+                  <span key={p}>{p === 'mercadopago' ? 'Cartão' : p === 'whatsapp' ? 'Combinar' : PAY_LABEL[p].split(' ')[0]}</span>
                 ))}
               </div>
             )}

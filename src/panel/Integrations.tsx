@@ -67,7 +67,7 @@ export default function Integrations() {
     return (
       <div className="stack">
         <PageHead title="Integrações" />
-        <Upsell feature="pix">Receba por Pix, cartão e boleto, ofereça pagamento na entrega e conecte ferramentas de anúncio no plano Loja.</Upsell>
+        <Upsell feature="pix">Receba por Pix e cartão, ofereça pagamento na entrega e conecte ferramentas de anúncio no plano Loja.</Upsell>
       </div>
     )
 
@@ -99,7 +99,7 @@ export default function Integrations() {
           <h2>Mercado Pago</h2>
           <Badge tone={mp ? 'ok' : ''}>{mp == null ? '…' : mp ? 'Conectado' : 'Não conectado'}</Badge>
         </div>
-        <p className="muted small">Cartão de crédito em até 12x, Pix e boleto, com confirmação automática do pedido. O dinheiro cai na sua conta do Mercado Pago; a taxa do Mercado Pago e a taxa da plataforma são descontadas em cada venda.</p>
+        <p className="muted small">Cartão de crédito em até 12x e Pix, com confirmação automática do pedido. O dinheiro cai na sua conta do Mercado Pago; a taxa do Mercado Pago e a taxa da plataforma são descontadas em cada venda.</p>
         {mp ? (
           <>
             <Toggle checked={p.mercadopago.enabled} onChange={(v) => setP({ mercadopago: { enabled: v } })} label="Oferecer o Mercado Pago no fechamento do pedido" />

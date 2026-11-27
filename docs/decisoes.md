@@ -28,7 +28,8 @@ Decisões que o planejamento deixava em aberto ou que surgiram ao construir. Tod
 | Custo do produto | Ninguém lê a coluna direto; o painel usa a função `product_costs` (migração 0004) | Permissão por coluna não distingue o dono da loja, e qualquer conta logada lia o custo das outras lojas |
 | Imagens | Só JPEG, PNG, WebP e GIF até 5 MB; SVG recusado | SVG pode carregar script |
 | Estoque fora do Pro | Quem já controlava estoque (ex.: depois do teste) pode repor ou desligar o controle | Sem isso o produto ficava esgotado para sempre |
-| Teste grátis ou mensalidade vencidos | O painel avisa; o servidor não bloqueia nem muda o plano sozinho | Mantém a suspensão manual pelo admin (ver PENDENCIAS) |
+| Teste grátis ou mensalidade vencidos | 7 dias de tolerância com avisos em todas as telas do painel e lembrete diário; depois a loja vira plano Vitrine até o pagamento (migração 0005). Suspensão continua manual | A loja não some do ar, os dados ficam guardados e o lojista tem motivo para pagar |
+| Boleto no Mercado Pago | Desligado | Compensa em até 3 dias úteis e o pedido com Mercado Pago é cancelado em 24 horas |
 
 ## O que ainda não foi testado com contas reais
 

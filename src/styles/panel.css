@@ -46,3 +46,4 @@ details.panel-group[open] > summary::after { content: '▴'; }
 details.panel-group > div { padding: 0 14px 14px; display: grid; gap: 12px; }
 .item-list { display: grid; gap: 8px; }
 .item-box { border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: grid; gap: 8px; background: var(--surface-2); }
+.billing-notice { margin-bottom: 16px; }

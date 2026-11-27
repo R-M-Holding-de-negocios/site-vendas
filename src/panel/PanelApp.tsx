@@ -8,6 +8,7 @@ import type { Store } from '../lib/types'
 import { slugify } from '../lib/util'
 import { ErrorBox, Field, Loading, toast } from '../ui/kit'
 import '../styles/panel.css'
+import { BillingNotice } from './BillingNotice'
 
 const Home = lazy(() => import('./Home'))
 const Products = lazy(() => import('./Products'))
@@ -290,6 +291,7 @@ export default function PanelApp() {
               </>
             )}
             <main className="main">
+              <BillingNotice store={store} asAdmin={!!state.asAdmin} />
               <Routes>
                 <Route index element={<Home />} />
                 <Route path="produtos" element={<Products />} />

@@ -32,7 +32,9 @@ Para tirar alguém do admin: `delete from public.platform_admins where user_id =
 
 Pedidos pagos por **Mercado Pago** que ficam **24 horas** sem confirmação de pagamento são cancelados automaticamente, o estoque volta e o histórico do pedido recebe a nota "Pagamento não confirmado em 24 horas". Pedidos em Pix direto, dinheiro, cartão na entrega ou WhatsApp não são tocados: o Pix direto é confirmado à mão pelo lojista, que cancela os que não forem pagos (até a migração 0004 o Pix também era cancelado sozinho, e o lojista perdia pedidos pagos que confirmava atrasado).
 
-Para ligar: ative a extensão **pg_cron** (Database > Extensions) e rode `supabase/cron.sql` no SQL Editor. Ele agenda `public.expire_pending_orders()` a cada 15 minutos e pode ser rodado de novo sem duplicar o agendamento.
+A segunda tarefa cuida do **vencimento do plano** (migração 0005). Teste grátis ou mensalidade vencidos têm **7 dias de tolerância**: a loja funciona normalmente e o painel do lojista avisa em todas as telas (e com um lembrete por dia). Passados os 7 dias, `public.downgrade_lapsed_stores()` muda a loja para o plano **Vitrine** (pedidos só pelo WhatsApp), guarda o plano anterior em `plan_before_downgrade` e registra no histórico do admin. Nada é apagado. Quando o admin registra o pagamento, o plano anterior volta.
+
+Para ligar: ative a extensão **pg_cron** (Database > Extensions) e rode `supabase/cron.sql` no SQL Editor. Ele agenda `expire_pending_orders()` a cada 15 minutos e `downgrade_lapsed_stores()` a cada hora, e pode ser rodado de novo sem duplicar os agendamentos.
 
 ## O que o banco garante
 

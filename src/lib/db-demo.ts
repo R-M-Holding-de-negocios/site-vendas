@@ -1,7 +1,7 @@
 // Modo demonstração: tudo fica no localStorage deste navegador.
 // Serve para conhecer e testar o sistema sem configurar o banco.
 import type { Db, Query, TableName, Tables, User } from './db'
-import { demoRpc } from './demo-rpc'
+import { applyLapses, demoRpc } from './demo-rpc'
 import { seedDemo } from './seed'
 import { nowIso, uid } from './util'
 
@@ -101,6 +101,7 @@ export function demoDb(): Db {
     seedDemo(s)
     localStorage.setItem(PREFIX + 'seeded', '1')
   }
+  applyLapses(s)
   const rpc = demoRpc(s)
   const delay = <T>(v: T) => new Promise<T>((r) => setTimeout(() => r(v), 30))
 

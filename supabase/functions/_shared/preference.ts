@@ -106,7 +106,8 @@ export function buildPreference(env: Env, store: StoreLite, order: Order) {
     back_urls: { success: back, pending: back, failure: back },
     auto_return: 'approved',
     statement_descriptor: statementDescriptor(store.name),
-    payment_methods: { installments: maxInst },
+    // Sem boleto: ele compensa em até 3 dias úteis e o pedido é cancelado em 24 horas (cron.sql).
+    payment_methods: { installments: maxInst, excluded_payment_types: [{ id: 'ticket' }] },
     metadata: { store_id: store.id, order_id: order.id, order_number: order.number },
   }
 }
