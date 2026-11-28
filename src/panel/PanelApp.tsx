@@ -3,7 +3,8 @@ import { NavLink, Navigate, Route, Routes, useLocation, useNavigate, useSearchPa
 import { db, myStore, normalizeStore, PLATFORM_NAME, storeUrl } from '../lib/api'
 import { validSlug } from '../lib/demo-rpc'
 import { can } from '../lib/plans'
-import { defaultSettings, defaultTheme } from '../lib/theme'
+import { SEGMENTS, starterTheme } from '../lib/starter'
+import { defaultSettings } from '../lib/theme'
 import type { Store } from '../lib/types'
 import { slugify } from '../lib/util'
 import { ErrorBox, Field, Loading, toast } from '../ui/kit'
@@ -106,6 +107,7 @@ function Onboarding({ onCreated }: { onCreated: (s: Store) => void }) {
   const [slug, setSlug] = useState('')
   const [touched, setTouched] = useState(false)
   const [whatsapp, setWhatsapp] = useState('')
+  const [segment, setSegment] = useState('')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   async function submit(e: FormEvent) {
@@ -115,7 +117,7 @@ function Onboarding({ onCreated }: { onCreated: (s: Store) => void }) {
     if (whatsapp.replace(/\D/g, '').length < 10) return setErr('Informe o WhatsApp com DDD.')
     setBusy(true)
     try {
-      onCreated(normalizeStore(await db.rpc('create_store', { name, slug, whatsapp, settings: defaultSettings(), theme: defaultTheme() })))
+      onCreated(normalizeStore(await db.rpc('create_store', { name, slug, whatsapp, settings: defaultSettings(), theme: starterTheme(segment) })))
     } catch (e) {
       setErr((e as Error).message)
       setBusy(false)
@@ -150,6 +152,17 @@ function Onboarding({ onCreated }: { onCreated: (s: Store) => void }) {
             />
           </span>
         </Field>
+        <div className="stack tight" role="group" aria-label="O que você vende?">
+          <span className="field-label">O que você vende?</span>
+          <div className="chips">
+            {SEGMENTS.map((s) => (
+              <button key={s.id} type="button" className={`chip ${segment === s.id ? 'on' : ''}`} aria-pressed={segment === s.id} onClick={() => setSegment(s.id)}>
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <span className="muted small">A loja já começa com cores e textos que combinam. Dá para mudar tudo depois.</span>
+        </div>
         <Field label="WhatsApp que recebe os pedidos">
           <input required type="tel" inputMode="tel" placeholder="(11) 99999-9999" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
         </Field>

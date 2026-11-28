@@ -341,3 +341,5 @@
 /* Prévia do editor: elementos fixos ficam presos à moldura. */
 .preview-frame { transform: translateZ(0); overflow: auto; }
 .preview-frame .st { min-height: 100%; }
+.st .empty-store { text-align: center; display: grid; gap: 8px; padding: 24px 0; }
+.st .sec:has(> .wrap:empty) { display: none; }

@@ -237,6 +237,13 @@ function SectionBody({ s, first }: { s: Section; first: boolean }) {
     }
     case 'products': {
       const list = pickProducts(products, p)
+      if (!list.length && p.source === 'all' && !visibleProducts(products).length)
+        return (
+          <div id="produtos" className="empty-store">
+            <Title text={p.title} center />
+            <p className="muted">Os produtos estão chegando. Enquanto isso, fale com a gente pelo WhatsApp.</p>
+          </div>
+        )
       if (!list.length) return null
       return (
         <div id={p.source === 'all' ? 'produtos' : undefined}>
