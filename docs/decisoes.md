@@ -31,6 +31,7 @@ Decisões que o planejamento deixava em aberto ou que surgiram ao construir. Tod
 | Teste grátis ou mensalidade vencidos | 7 dias de tolerância com avisos em todas as telas do painel e lembrete diário; depois a loja vira plano Vitrine até o pagamento (migração 0005). Suspensão continua manual | A loja não some do ar, os dados ficam guardados e o lojista tem motivo para pagar |
 | Boleto no Mercado Pago | Desligado | Compensa em até 3 dias úteis e o pedido com Mercado Pago é cancelado em 24 horas |
 
+| Plano conferido no servidor | Cupom, carrinho abandonado, contatos e aviso de chegada conferem o plano e se a loja está no ar; todo pedido exige forma de pagamento (migração 0006) | Antes só a tela conferia; quem chamasse a API direto contornava |
 | Efeitos animados da loja | Implementação própria em `src/store/fx.tsx` e `src/styles/fx.css`, sem bibliotecas | Os componentes do React Bits têm licença MIT + Commons Clause, que não permite revender o código como parte de um produto; os efeitos são ideias comuns e foram reescritos do zero, leves e sem dependências |
 | Efeitos e acessibilidade | Tudo desliga com Animações: desligadas e com reduzir movimento do aparelho; partículas pausam fora da tela | Desempenho em celular simples e conforto de quem enjoa com movimento |
 

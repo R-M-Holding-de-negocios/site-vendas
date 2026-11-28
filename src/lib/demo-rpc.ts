@@ -88,6 +88,7 @@ export function demoRpc(s: DemoStore): Rpc {
       if (!a.customer.name.trim() || onlyDigits(a.customer.phone).length < 10) throw new Error('Informe seu nome e WhatsApp com DDD.')
       const needsAddress = a.shipping.method === 'zone' || a.shipping.method === 'fixed'
       if (needsAddress && (!a.shipping.address?.street || !a.shipping.address?.number)) throw new Error('Informe o endereço de entrega.')
+      if (!a.payment?.method) throw new Error('Escolha a forma de pagamento.')
 
       // Cupom só vale no plano Pro; nos outros planos o código é ignorado (não conta uso nem fica no pedido).
       const code = can(store, 'coupons') ? a.coupon.trim().toUpperCase() : ''
@@ -172,6 +173,8 @@ export function demoRpc(s: DemoStore): Rpc {
 
     async check_coupon(a) {
       const code = a.code.trim().toUpperCase()
+      const store = s.rows('stores').find((x) => x.id === a.store_id)
+      if (!store || store.status === 'suspended' || store.status === 'closed' || !can(store, 'coupons')) return null
       return s.rows('coupons').find((c) => c.store_id === a.store_id && c.code === code && c.active) ?? null
     },
 
@@ -204,6 +207,8 @@ export function demoRpc(s: DemoStore): Rpc {
     },
 
     async save_checkout(a) {
+      const store = s.rows('stores').find((x) => x.id === a.store_id)
+      if (!store || store.status === 'suspended' || store.status === 'closed' || !can(store, 'abandoned_carts')) throw new Error('Recurso indisponível nesta loja.')
       const now = nowIso()
       const existing = a.id ? s.rows('checkouts').find((c) => c.id === a.id && c.store_id === a.store_id && !c.order_id) : null
       if (existing) {

@@ -69,7 +69,7 @@ export default function Checkout() {
   // Guarda o carrinho com o contato para a recuperação de carrinho abandonado.
   const draftKey = useMemo(() => JSON.stringify([name, onlyDigits(phone), q.total_cents, cart.lines]), [name, phone, q.total_cents, cart.lines])
   useEffect(() => {
-    if (preview || onlyDigits(phone).length < 10 || !q.items.length) return
+    if (preview || !can(store, 'abandoned_carts') || onlyDigits(phone).length < 10 || !q.items.length) return
     const t = setTimeout(() => {
       db.rpc('save_checkout', {
         id: checkoutId.current,
