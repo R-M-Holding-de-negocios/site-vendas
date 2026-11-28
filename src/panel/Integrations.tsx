@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { db } from '../lib/api'
-import { connectMercadoPago, isMercadoPagoConnected } from '../lib/mercadopago'
+import { connectMercadoPago, mercadoPagoStatus } from '../lib/mercadopago'
 import { normalizePixKey } from '../lib/pix'
 import { can } from '../lib/plans'
 import type { StoreSettings } from '../lib/types'
@@ -13,11 +13,15 @@ export default function Integrations() {
   const [params, setParams] = useSearchParams()
   const [s, setS] = useState<StoreSettings>(store.settings)
   const [mp, setMp] = useState<boolean | null>(null)
+  const [mpLost, setMpLost] = useState(false)
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
   useEffect(() => setS(store.settings), [store.settings])
   useEffect(() => {
-    isMercadoPagoConnected(store.id).then(setMp, () => setMp(false))
+    mercadoPagoStatus(store.id).then(
+      (r) => (setMp(r.connected), setMpLost(r.lost)),
+      () => setMp(false),
+    )
   }, [store.id, store.settings.payments.mercadopago.enabled])
   useEffect(() => {
     const r = params.get('mp')
@@ -100,6 +104,9 @@ export default function Integrations() {
           <Badge tone={mp ? 'ok' : ''}>{mp == null ? '…' : mp ? 'Conectado' : 'Não conectado'}</Badge>
         </div>
         <p className="muted small">Cartão de crédito em até 12x e Pix, com confirmação automática do pedido. O dinheiro cai na sua conta do Mercado Pago; a taxa do Mercado Pago e a taxa da plataforma são descontadas em cada venda.</p>
+        {mpLost && (
+          <ErrorBox message="A conexão com o Mercado Pago caiu (o acesso foi desautorizado ou expirou). Enquanto isso a loja não oferece Mercado Pago. Conecte de novo para voltar a receber." />
+        )}
         {mp ? (
           <>
             <Toggle checked={p.mercadopago.enabled} onChange={(v) => setP({ mercadopago: { enabled: v } })} label="Oferecer o Mercado Pago no fechamento do pedido" />

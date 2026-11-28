@@ -347,6 +347,15 @@ export function demoRpc(s: DemoStore): Rpc {
       return out
     },
 
+    async store_private(a) {
+      const u = me()
+      const out: Record<string, Partial<Store>> = {}
+      for (const st of s.rows('stores'))
+        if (a.ids.includes(st.id) && (st.owner_id === u.id || s.isAdmin()))
+          out[st.id] = { trial_ends_at: st.trial_ends_at, paid_until: st.paid_until, theme_draft: st.theme_draft, theme_history: st.theme_history, plan_before_downgrade: st.plan_before_downgrade }
+      return out
+    },
+
     async payment_connections(a) {
       const st = s.rows('stores').find((x) => x.id === a.store_id)
       return { mercadopago: !!st?.settings?.payments?.mercadopago?.enabled }

@@ -68,6 +68,8 @@ export interface PaymentsDb {
   takeState(state: string): Promise<OAuthState | null>
   getSecret(storeId: string): Promise<MpSecret | null>
   saveSecret(storeId: string, data: MpSecret): Promise<void>
+  /** Guarda a conexão como caída (provider 'mercadopago_revoked_<data>'), sem apagar. */
+  revokeSecret(storeId: string, at: Date): Promise<void>
   order(id: string): Promise<Order | null>
   /**
    * Atualiza o pedido só se o status atual estiver em `from` (evita processar duas vezes).

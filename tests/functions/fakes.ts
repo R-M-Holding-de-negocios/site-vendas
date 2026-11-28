@@ -83,6 +83,11 @@ export class FakeDb implements PaymentsDb {
   async saveSecret(storeId: string, data: MpSecret) {
     this.secrets.set(storeId, data)
   }
+  revoked: string[] = []
+  async revokeSecret(storeId: string) {
+    this.secrets.delete(storeId)
+    this.revoked.push(storeId)
+  }
   async order(id: string) {
     const o = this.orders.find((x) => x.id === id)
     return o ? structuredClone(o) : null

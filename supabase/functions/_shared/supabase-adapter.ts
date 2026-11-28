@@ -38,6 +38,11 @@ export function supabasePaymentsDb(sb: Client): PaymentsDb {
     async saveSecret(storeId, data) {
       check(await sb.from('store_secrets').upsert({ store_id: storeId, provider: 'mercadopago', data }, { onConflict: 'store_id,provider' }))
     },
+    async revokeSecret(storeId, at) {
+      check(
+        await sb.from('store_secrets').update({ provider: `mercadopago_revoked_${at.toISOString()}` }).eq('store_id', storeId).eq('provider', 'mercadopago'),
+      )
+    },
     async order(id) {
       return check(await sb.from('orders').select('*').eq('id', id).maybeSingle()) as Order | null
     },

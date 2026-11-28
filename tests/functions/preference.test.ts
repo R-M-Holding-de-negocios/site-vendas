@@ -85,3 +85,42 @@ describe('preferência do Checkout Pro', () => {
     expect(calls).toHaveLength(0)
   })
 })
+
+describe('renovação do acesso ao Mercado Pago', () => {
+  const expired = () => secret({ expires_at: '2026-11-26T13:00:00Z' })
+
+  it('Mercado Pago recusa a renovação: conexão fica como caída e a loja deixa de oferecer', async () => {
+    const db = new FakeDb()
+    db.secrets.set(STORE_ID, expired())
+    const { fetch } = fakeFetch({ 'POST /oauth/token': () => new Response('{"error":"invalid_grant"}', { status: 400 }) })
+    await expect(createCheckout(makeDeps(db, fetch), { order_id: ORDER_ID, token: 'tok123' })).rejects.toThrow('ainda não conectou')
+    expect(db.revoked).toEqual([STORE_ID])
+  })
+
+  it('outra chamada renovou primeiro: usa o token novo sem derrubar a conexão', async () => {
+    const db = new FakeDb()
+    db.secrets.set(STORE_ID, expired())
+    const { fetch, calls } = fakeFetch({
+      'POST /oauth/token': () => {
+        db.secrets.set(STORE_ID, secret({ access_token: 'APP_USR-da-outra', expires_at: '2027-05-01T00:00:00Z' }))
+        return new Response('{"error":"invalid_grant"}', { status: 400 })
+      },
+      'POST /checkout/preferences': () => ({ init_point: 'https://mp/checkout' }),
+    })
+    await createCheckout(makeDeps(db, fetch), { order_id: ORDER_ID, token: 'tok123' })
+    expect(calls[1].headers.authorization).toBe('Bearer APP_USR-da-outra')
+    expect(db.revoked).toEqual([])
+  })
+
+  it('falha passageira com token ainda válido: segue com o token atual', async () => {
+    const db = new FakeDb()
+    db.secrets.set(STORE_ID, secret({ expires_at: '2026-11-26T18:00:00Z' })) // vence em 6 h (renova antes de 24 h)
+    const { fetch, calls } = fakeFetch({
+      'POST /oauth/token': () => new Response('erro', { status: 503 }),
+      'POST /checkout/preferences': () => ({ init_point: 'https://mp/checkout' }),
+    })
+    await createCheckout(makeDeps(db, fetch), { order_id: ORDER_ID, token: 'tok123' })
+    expect(calls[1].headers.authorization).toBe('Bearer APP_USR-seller')
+    expect(db.revoked).toEqual([])
+  })
+})

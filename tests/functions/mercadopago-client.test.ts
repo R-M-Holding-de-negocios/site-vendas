@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { db } from '../../src/lib/api'
-import { connectMercadoPago, isMercadoPagoConnected, startMercadoPagoCheckout } from '../../src/lib/mercadopago'
+import { connectMercadoPago, mercadoPagoStatus, startMercadoPagoCheckout } from '../../src/lib/mercadopago'
 import type { Store } from '../../src/lib/types'
 
 describe('lib/mercadopago no modo demonstração', () => {
@@ -10,10 +10,10 @@ describe('lib/mercadopago no modo demonstração', () => {
     expect(await startMercadoPagoCheckout('o1', 'tok', 'doces-da-ana')).toBe('/doces-da-ana/pedido/o1?t=tok&simulado=1')
   })
 
-  it('isMercadoPagoConnected segue a configuração da loja', async () => {
+  it('mercadoPagoStatus segue a configuração da loja', async () => {
     const [store] = (await db.list('stores', { eq: { slug: 'doces-da-ana' }, limit: 1 })) as Store[]
     expect(store).toBeTruthy()
-    expect(await isMercadoPagoConnected(store.id)).toBe(store.settings.payments.mercadopago.enabled)
-    expect(await isMercadoPagoConnected('nao-existe')).toBe(false)
+    expect(await mercadoPagoStatus(store.id)).toEqual({ connected: store.settings.payments.mercadopago.enabled, lost: false })
+    expect((await mercadoPagoStatus('nao-existe')).connected).toBe(false)
   })
 })

@@ -7,7 +7,10 @@ const WRITE_ONLY: string[] = ['events', 'leads', 'stock_alerts']
 /** Colunas de products que qualquer um pode ler; o custo vem à parte (migração 0004). */
 export const PRODUCT_COLUMNS =
   'id,store_id,name,description,price_cents,promo_price_cents,promo_ends_at,images,category_ids,available,featured,position,sku,track_stock,stock,weight_g,height_cm,width_cm,length_cm,options,qty_discounts,video_url,seo,blocked,sold_count,created_at'
-const cols = (table: string) => (table === 'products' ? PRODUCT_COLUMNS : '*') as '*' // o tipo '*' mantém o retorno sem inferência de colunas
+/** Colunas de stores que qualquer um pode ler; rascunho do tema, histórico e datas de cobrança vêm à parte (migração 0007). */
+export const STORE_COLUMNS = 'id,owner_id,slug,name,whatsapp,description,logo_url,plan,status,settings,theme,created_at'
+const STORE_PRIVATE_DEFAULTS = { trial_ends_at: null, paid_until: null, theme_draft: null, theme_history: [], plan_before_downgrade: null }
+const cols = (table: string) => (table === 'products' ? PRODUCT_COLUMNS : table === 'stores' ? STORE_COLUMNS : '*') as '*' // o tipo '*' mantém o retorno sem inferência de colunas
 
 const translate = (e: { message: string; code?: string }) => {
   if (e.code === '23505') return new Error('Esse endereço ou código já está em uso. Escolha outro.')
@@ -44,6 +47,7 @@ export function supabaseDb(url: string, key: string): Db {
   /** Completa cost_cents dos produtos do próprio lojista (para os outros, fica null). */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async function withCosts<R>(table: string, rows: R[]): Promise<R[]> {
+    if (table === 'stores') return withStorePrivate(rows)
     if (table !== 'products' || !rows.length) return rows
     const costs: Record<string, number> = {}
     if ((await sb.auth.getSession()).data.session) {
@@ -55,6 +59,17 @@ export function supabaseDb(url: string, key: string): Db {
       }
     }
     return rows.map((r) => ({ ...r, cost_cents: costs[(r as { id: string }).id] ?? null }))
+  }
+
+  /** Completa as colunas internas das lojas do próprio lojista (ou de qualquer uma, para o admin). */
+  async function withStorePrivate<R>(rows: R[]): Promise<R[]> {
+    let extra: Record<string, object> = {}
+    if (rows.length && (await sb.auth.getSession()).data.session) {
+      const { data, error } = await sb.rpc('store_private', { a: { ids: rows.map((r) => (r as { id: string }).id) } })
+      if (error) throw translate(error)
+      extra = data ?? {}
+    }
+    return rows.map((r) => ({ ...r, ...STORE_PRIVATE_DEFAULTS, ...extra[(r as { id: string }).id] }))
   }
 
   return {

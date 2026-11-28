@@ -127,7 +127,9 @@ export interface Rpc {
   admin_update_plan(a: { id: PlanId; price_cents: number; fee_percent: number }): Promise<void>
   admin_announce(a: { title: string; body: string }): Promise<void>
   /** Contas de pagamento online conectadas pela loja (nunca devolve os tokens). */
-  payment_connections(a: { store_id: string }): Promise<{ mercadopago: boolean }>
+  payment_connections(a: { store_id: string }): Promise<{ mercadopago: boolean; mercadopago_lost?: boolean }>
+  /** Colunas internas da loja (rascunho do tema, histórico, datas de cobrança) para o dono ou o admin. */
+  store_private(a: { ids: string[] }): Promise<Record<string, Partial<Store>>>
   /** Custo dos produtos da própria loja (ou de qualquer loja, para o admin): { id: centavos }. */
   product_costs(a: { ids: string[] }): Promise<Record<string, number>>
 }

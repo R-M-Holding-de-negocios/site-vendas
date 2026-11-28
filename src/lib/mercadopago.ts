@@ -41,7 +41,8 @@ export async function startMercadoPagoCheckout(orderId: string, token: string, s
   return url
 }
 
-export async function isMercadoPagoConnected(storeId: string): Promise<boolean> {
+/** connected: pode receber; lost: estava conectado, mas o Mercado Pago recusou a renovação do acesso. */
+export async function mercadoPagoStatus(storeId: string): Promise<{ connected: boolean; lost: boolean }> {
   const r = await db.rpc('payment_connections', { store_id: storeId })
-  return !!r?.mercadopago
+  return { connected: !!r?.mercadopago, lost: !r?.mercadopago && !!r?.mercadopago_lost }
 }

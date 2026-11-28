@@ -32,6 +32,9 @@ Decisões que o planejamento deixava em aberto ou que surgiram ao construir. Tod
 | Boleto no Mercado Pago | Desligado | Compensa em até 3 dias úteis e o pedido com Mercado Pago é cancelado em 24 horas |
 
 | Plano conferido no servidor | Cupom, carrinho abandonado, contatos e aviso de chegada conferem o plano e se a loja está no ar; todo pedido exige forma de pagamento (migração 0006) | Antes só a tela conferia; quem chamasse a API direto contornava |
+| Dados internos da loja | Rascunho do tema, histórico de versões e datas de cobrança só para o dono e o admin, pela função `store_private` (migração 0007) | Visitantes liam o rascunho ainda não publicado e as datas de pagamento |
+| Mercado Pago recusa renovar o acesso | A conexão é guardada como caída (`mercadopago_revoked_<data>`), a loja deixa de oferecer Mercado Pago e o painel pede para conectar de novo. Se outra chamada renovou ao mesmo tempo, usa o token novo; em falha passageira, segue com o token atual enquanto vale | Antes a loja continuava mostrando Mercado Pago e o cliente caía num erro |
+| `state` do OAuth não preso ao navegador | Risco aceito | O `state` já é de uso único, vale 1 hora e fica preso à loja e ao usuário que iniciou; quem tentasse forjar a volta só ligaria a própria conta à própria loja |
 | Efeitos animados da loja | Implementação própria em `src/store/fx.tsx` e `src/styles/fx.css`, sem bibliotecas | Os componentes do React Bits têm licença MIT + Commons Clause, que não permite revender o código como parte de um produto; os efeitos são ideias comuns e foram reescritos do zero, leves e sem dependências |
 | Efeitos e acessibilidade | Tudo desliga com Animações: desligadas e com reduzir movimento do aparelho; partículas pausam fora da tela | Desempenho em celular simples e conforto de quem enjoa com movimento |
 

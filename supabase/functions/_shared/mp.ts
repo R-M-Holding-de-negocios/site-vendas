@@ -92,7 +92,24 @@ export async function sellerToken(deps: Deps, storeId: string): Promise<string |
   const exp = Date.parse(secret.expires_at)
   if (Number.isFinite(exp) && exp - deps.now().getTime() > REFRESH_MARGIN_MS) return secret.access_token
   if (!secret.refresh_token) return secret.access_token
-  const fresh = await refreshToken(deps, secret)
+  let fresh: MpSecret
+  try {
+    fresh = await refreshToken(deps, secret)
+  } catch (e) {
+    // Outra chamada (webhook e checkout ao mesmo tempo) pode ter renovado primeiro;
+    // aí o refresh_token antigo deixa de valer, mas o novo token já está salvo.
+    const latest = await deps.db.getSecret(storeId)
+    if (latest?.access_token && latest.access_token !== secret.access_token) return latest.access_token
+    // O Mercado Pago recusou a renovação (lojista desautorizou o app, refresh vencido):
+    // a conexão é guardada como caída e a loja deixa de oferecer Mercado Pago.
+    if (e instanceof MpError && (e.status === 400 || e.status === 401)) {
+      await deps.db.revokeSecret(storeId, deps.now())
+      return null
+    }
+    // Falha passageira (rede, 5xx): segue com o token atual enquanto ele ainda vale.
+    if (Number.isFinite(exp) && exp > deps.now().getTime()) return secret.access_token
+    throw e
+  }
   await deps.db.saveSecret(storeId, fresh)
   return fresh.access_token
 }
